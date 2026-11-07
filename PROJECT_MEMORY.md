@@ -12,7 +12,9 @@
 - **Components:**
   1. **Home Screen App Widget (`ToothWidgetProvider`):** 1-tap toggle (Red: "לא צחצחתי", Green: "צחצחתי! ✨"), streak tracking. Status resets daily at 04:00 AM (not midnight) to accommodate night routines.
   2. **Watch & Sleep Detector (`WatchAndSleepDetector`):** Checks Google Wearable Node API & Bluetooth for Galaxy Watch, and detects Samsung Sleep Mode (Bedtime Mode / ZenMode / DND).
-  3. **Urgent Notification Helper (`NotificationHelper`):** High priority notification channel `tooth_alarm_v3` using `NotificationCompat.CATEGORY_ALARM`, `setFullScreenIntent(true)`, and `Notification.FLAG_INSISTENT` so the Galaxy Watch vibrates vigorously with its full alarm strength until interacted with.
+  3. **Watch-Focused Pulsing & Escalation (`NotificationHelper`):**
+     - **When Watch is Connected/Worn:** Alerts are sent exclusively to the Galaxy Watch using a multi-pulse haptic train (5 pulses over ~8 seconds) while keeping the phone silent and vibration-free.
+     - **3-Alert Escalation System:** Alerts 1, 2, and 3 (spaced 7 minutes apart) vibrate on the watch wrist. If all 3 are ignored and the user has not marked brushed, the app **escalates to a full Emergency Phone Alarm** (`tooth_emergency_phone_v4`) with loud siren, violent vibration, and full-screen intent to wake the user before deep sleep.
   4. **Direct Watch Actions (`NotificationActionReceiver`):** Interactive notification actions on the watch ("צחצחתי עכשיו!", "נודניק 10 דק'").
   5. **Background Scheduler (`ToothCheckWorker` + `BootReceiver`):** WorkManager daily periodic check at bedtime (default 23:00) persisting across phone reboots.
   6. **In-App OTA Updater (`OtaUpdater`):** Checks GitHub Releases API for new versions automatically on startup or via manual button click. Downloads `ToothLock.apk` in background with progress display, and triggers native package installer with 1-click update via `FileProvider`.

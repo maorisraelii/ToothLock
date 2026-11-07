@@ -19,6 +19,7 @@ class ToothPreferences(context: Context) {
         private const val KEY_STREAK = "streak_days"
         private const val KEY_LAST_STREAK_DATE = "last_streak_date"
         private const val PREFIX_BRUSHED = "brushed_"
+        private const val PREFIX_ALERT_COUNT = "alert_count_"
 
         /**
          * Shift the day backwards by 4 hours so the status resets at 04:00 AM instead of 00:00.
@@ -58,6 +59,7 @@ class ToothPreferences(context: Context) {
 
         if (brushed && !wasBrushed) {
             updateStreakOnSuccess()
+            resetAlertCount()
         } else if (!brushed && wasBrushed) {
             // Revert streak increment if toggled off
             val current = getStreak()
@@ -65,6 +67,21 @@ class ToothPreferences(context: Context) {
                 prefs.edit().putInt(KEY_STREAK, current - 1).apply()
             }
         }
+    }
+
+    fun getAlertCountToday(): Int {
+        return prefs.getInt(PREFIX_ALERT_COUNT + getTodayKey(), 0)
+    }
+
+    fun incrementAlertCount(): Int {
+        val today = getTodayKey()
+        val next = getAlertCountToday() + 1
+        prefs.edit().putInt(PREFIX_ALERT_COUNT + today, next).apply()
+        return next
+    }
+
+    fun resetAlertCount() {
+        prefs.edit().remove(PREFIX_ALERT_COUNT + getTodayKey()).apply()
     }
 
     private fun updateStreakOnSuccess() {

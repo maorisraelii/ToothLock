@@ -238,11 +238,23 @@
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:layout_marginTop="10dp"
-            android:text="🔔 בדוק התראת שעון עכשיו"
+            android:text="🔔 בדוק רטט ממושך בשעון (שקט בטלפון)"
             android:textColor="#80D8FF"
             android:textSize="15sp"
             app:cornerRadius="14dp"
             app:strokeColor="#80D8FF" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_test_emergency"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="10dp"
+            android:text="🚨 בדוק אזעקת חירום בטלפון (שלב 4)"
+            android:textColor="#FF8A80"
+            android:textSize="15sp"
+            app:cornerRadius="14dp"
+            app:strokeColor="#FF5252" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_check_update"
