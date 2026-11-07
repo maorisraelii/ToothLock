@@ -15,6 +15,7 @@
   3. **Urgent Notification Helper (`NotificationHelper`):** High priority notification channel `tooth_alarm_v3` using `NotificationCompat.CATEGORY_ALARM`, `setFullScreenIntent(true)`, and `Notification.FLAG_INSISTENT` so the Galaxy Watch vibrates vigorously with its full alarm strength until interacted with.
   4. **Direct Watch Actions (`NotificationActionReceiver`):** Interactive notification actions on the watch ("צחצחתי עכשיו!", "נודניק 10 דק'").
   5. **Background Scheduler (`ToothCheckWorker` + `BootReceiver`):** WorkManager daily periodic check at bedtime (default 23:00) persisting across phone reboots.
+  6. **In-App OTA Updater (`OtaUpdater`):** Checks GitHub Releases API for new versions automatically on startup or via manual button click. Downloads `ToothLock.apk` in background with progress display, and triggers native package installer with 1-click update via `FileProvider`.
 
 ---
 
