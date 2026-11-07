@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0"
+                android:startY="0"
+                android:endX="108"
+                android:endY="108"
+                android:startColor="#020803"
+                android:centerColor="#09210B"
+                android:endColor="#14532D" />
+        </aapt:attr>
+    </path>
+    <!-- Radioactive hazard warning rings -->
+    <path
+        android:pathData="M54,18 A36,36 0 1 0 54,90 A36,36 0 1 0 54,18"
+        android:strokeColor="#22C55E"
+        android:strokeWidth="1.5"
+        android:strokeAlpha="0.35" />
+    <path
+        android:pathData="M54,24 A30,30 0 1 0 54,84 A30,30 0 1 0 54,24"
+        android:strokeColor="#A3E635"
+        android:strokeWidth="1"
+        android:strokeAlpha="0.2" />
+</vector>

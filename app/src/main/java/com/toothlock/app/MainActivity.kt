@@ -389,5 +389,31 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
             }
         }
+
+        @JavascriptInterface
+        fun setLauncherIcon(isToxic: Boolean) {
+            activity.runOnUiThread {
+                try {
+                    val pm = activity.packageManager
+                    val normalComponent = ComponentName(activity, "com.toothlock.app.MainActivityNormal")
+                    val toxicComponent = ComponentName(activity, "com.toothlock.app.MainActivityToxic")
+
+                    val currentToxicState = pm.getComponentEnabledSetting(toxicComponent)
+                    val desiredToxicState = if (isToxic) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+
+                    if (currentToxicState != desiredToxicState) {
+                        if (isToxic) {
+                            pm.setComponentEnabledSetting(toxicComponent, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP)
+                            pm.setComponentEnabledSetting(normalComponent, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP)
+                        } else {
+                            pm.setComponentEnabledSetting(normalComponent, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP)
+                            pm.setComponentEnabledSetting(toxicComponent, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP)
+                        }
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("ToothLockBridge", "Failed to switch launcher icon: ${e.message}")
+                }
+            }
+        }
     }
 }

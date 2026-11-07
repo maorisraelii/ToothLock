@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Wavy Stench & Odor Fumes Rising from Skull (סירחון עמרי סבן) -->
+    <!-- Left Stench Fume -->
+    <path
+        android:pathData="M 43,33 C 39,28 44,23 41,18 C 39,14 43,10 40,6"
+        android:strokeColor="#4ADE80"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round" />
+
+    <!-- Center Stench Fume (High & pungent) -->
+    <path
+        android:pathData="M 54,30 C 59,24 50,20 56,14 C 61,9 53,6 55,3"
+        android:strokeColor="#A3E635"
+        android:strokeWidth="3"
+        android:strokeLineCap="round" />
+
+    <!-- Right Stench Fume -->
+    <path
+        android:pathData="M 65,33 C 69,28 64,23 67,18 C 70,14 66,10 68,6"
+        android:strokeColor="#4ADE80"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round" />
+
+    <!-- Stench particles / odor specks -->
+    <path
+        android:pathData="M 33,18 A 1.8,1.8 0 1 0 33,21.6 A 1.8,1.8 0 1 0 33,18 Z"
+        android:fillColor="#86EFAC" />
+    <path
+        android:pathData="M 75,17 A 1.8,1.8 0 1 0 75,20.6 A 1.8,1.8 0 1 0 75,17 Z"
+        android:fillColor="#A3E635" />
+
+    <!-- Crossbones Behind Skull -->
+    <!-- Diagonal Bone 1: Top-Left to Bottom-Right -->
+    <path
+        android:pathData="M 28,40 L 80,78 M 80,40 L 28,78"
+        android:strokeColor="#86EFAC"
+        android:strokeWidth="5"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M 28,40 L 80,78 M 80,40 L 28,78"
+        android:strokeColor="#DCFCE7"
+        android:strokeWidth="3"
+        android:strokeLineCap="round" />
+
+    <!-- Bone End Knobs -->
+    <!-- Top Left -->
+    <path android:pathData="M 26,38 A 3,3 0 1 0 26,44 A 3,3 0 1 0 26,38 Z M 29,35 A 3,3 0 1 0 29,41 A 3,3 0 1 0 29,35 Z" android:fillColor="#DCFCE7" />
+    <!-- Top Right -->
+    <path android:pathData="M 82,38 A 3,3 0 1 0 82,44 A 3,3 0 1 0 82,38 Z M 79,35 A 3,3 0 1 0 79,41 A 3,3 0 1 0 79,35 Z" android:fillColor="#DCFCE7" />
+    <!-- Bottom Left -->
+    <path android:pathData="M 26,76 A 3,3 0 1 0 26,82 A 3,3 0 1 0 26,76 Z M 29,79 A 3,3 0 1 0 29,85 A 3,3 0 1 0 29,79 Z" android:fillColor="#DCFCE7" />
+    <!-- Bottom Right -->
+    <path android:pathData="M 82,76 A 3,3 0 1 0 82,82 A 3,3 0 1 0 82,76 Z M 79,79 A 3,3 0 1 0 79,85 A 3,3 0 1 0 79,79 Z" android:fillColor="#DCFCE7" />
+
+    <!-- Toxic Stench Skull Head (Cranium & Jaw) -->
+    <path
+        android:pathData="M 35,54 C 33,42 41,33 54,33 C 67,33 75,42 73,54 C 72,59 70,61 68,64 C 67,67 67,74 65,75 C 64,76 44,76 43,75 C 41,74 41,67 40,64 C 38,61 36,59 35,54 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="54"
+                android:startY="33"
+                android:endX="54"
+                android:endY="76"
+                android:startColor="#F0FDF4"
+                android:centerColor="#BBF7D0"
+                android:endColor="#86EFAC" />
+        </aapt:attr>
+    </path>
+
+    <!-- Skull Cheek Shadow / Contour -->
+    <path
+        android:pathData="M 37,55 C 39,63 43,65 43,74 M 71,55 C 69,63 65,65 65,74"
+        android:strokeColor="#22C55E"
+        android:strokeWidth="1.2"
+        android:strokeAlpha="0.5" />
+
+    <!-- Eye Sockets (Dark hollows with toxic green radioactive glow) -->
+    <!-- Left Eye -->
+    <path
+        android:pathData="M 46,45 C 49,45 50.5,48 50.5,52 C 50.5,56 49,58 46,58 C 43,58 41.5,56 41.5,52 C 41.5,48 43,45 46,45 Z"
+        android:fillColor="#052009" />
+    <path
+        android:pathData="M 46.5,49 A 2.2,2.2 0 1 0 46.5,53.4 A 2.2,2.2 0 1 0 46.5,49 Z"
+        android:fillColor="#4ADE80" />
+
+    <!-- Right Eye -->
+    <path
+        android:pathData="M 62,45 C 65,45 66.5,48 66.5,52 C 66.5,56 65,58 62,58 C 59,58 57.5,56 57.5,52 C 57.5,48 59,45 62,45 Z"
+        android:fillColor="#052009" />
+    <path
+        android:pathData="M 61.5,49 A 2.2,2.2 0 1 0 61.5,53.4 A 2.2,2.2 0 1 0 61.5,49 Z"
+        android:fillColor="#4ADE80" />
+
+    <!-- Inverted Triangular Nose Cavity -->
+    <path
+        android:pathData="M 54,58 L 52,62.5 H 56 Z"
+        android:fillColor="#052009" />
+
+    <!-- Mouth Grin & Teeth Lines -->
+    <path
+        android:pathData="M 45,69 C 49,70.5 59,70.5 63,69"
+        android:strokeColor="#052009"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round" />
+    <!-- Tooth Separators -->
+    <path
+        android:pathData="M 49,66 V 73 M 52.5,66 V 74 M 55.5,66 V 74 M 59,66 V 73"
+        android:strokeColor="#052009"
+        android:strokeWidth="1.4"
+        android:strokeLineCap="round" />
+
+    <!-- Stench Fly Buzzer 1 (Top Right) -->
+    <path
+        android:pathData="M 76,28 A 1.2,1.2 0 1 0 76,30.4 A 1.2,1.2 0 1 0 76,28 Z"
+        android:fillColor="#052009" />
+    <path
+        android:pathData="M 75,27.5 L 73,26 M 77,27.5 L 79,26"
+        android:strokeColor="#86EFAC"
+        android:strokeWidth="0.8" />
+
+</vector>

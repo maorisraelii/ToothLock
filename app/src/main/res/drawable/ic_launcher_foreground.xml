@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- ToothLock Shackle (Lock Motif) -->
+    <path
+        android:pathData="M 48,34 V 27 C 48,23.7 50.7,21 54,21 C 57.3,21 60,23.7 60,27 V 34"
+        android:strokeColor="#38BDF8"
+        android:strokeWidth="3"
+        android:strokeLineCap="round" />
+
+    <!-- Shackle inner gleam -->
+    <path
+        android:pathData="M 50,29 V 27 C 50,24.8 51.8,23 54,23"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.2"
+        android:strokeLineCap="round" />
+
+    <!-- Molar Tooth Body -->
+    <path
+        android:pathData="M 54,42 C 50,38 45,36 41,36 C 36,36 33,40 33,46 C 33,52 36,55 37,60 C 38,65 40,73 42,73 C 44,73 46,65 48,60 C 50,56 52,56 54,56 C 56,56 58,56 60,60 C 62,65 64,73 66,73 C 68,73 70,65 71,60 C 72,55 75,52 75,46 C 75,40 72,36 67,36 C 63,36 58,38 54,42 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="54"
+                android:startY="36"
+                android:endX="54"
+                android:endY="73"
+                android:startColor="#FFFFFF"
+                android:centerColor="#F0F9FF"
+                android:endColor="#BAE6FD" />
+        </aapt:attr>
+    </path>
+
+    <!-- Tooth Left Gloss / Shine Highlight -->
+    <path
+        android:pathData="M 37,45 C 37,41 39,39 42,39 C 43.5,39 45,40 46.5,41.5"
+        android:strokeColor="#38BDF8"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round" />
+
+    <!-- Tooth Lock Body Keyhole / Center Icon -->
+    <path
+        android:pathData="M 54,48 A 2.5,2.5 0 1 0 54,53 A 2.5,2.5 0 1 0 54,48 Z M 53,52 L 52.5,57 H 55.5 L 55,52 Z"
+        android:fillColor="#0284C7" />
+
+    <!-- Primary Diamond Sparkle (✦) Top Right -->
+    <path
+        android:pathData="M 75,27 C 75,30.5 77.5,33 81,33 C 77.5,33 75,35.5 75,39 C 75,35.5 72.5,33 69,33 C 72.5,33 75,30.5 75,27 Z"
+        android:fillColor="#38BDF8" />
+    <path
+        android:pathData="M 75,29 C 75,31.5 76.5,33 79,33 C 76.5,33 75,34.5 75,37 C 75,34.5 73.5,33 71,33 C 73.5,33 75,31.5 75,29 Z"
+        android:fillColor="#FFFFFF" />
+
+    <!-- Secondary Small Sparkle (✦) Bottom Left -->
+    <path
+        android:pathData="M 29,58 C 29,60 30.5,61.5 32.5,61.5 C 30.5,61.5 29,63 29,65 C 29,63 27.5,61.5 25.5,61.5 C 27.5,61.5 29,60 29,58 Z"
+        android:fillColor="#38BDF8" />
+
+</vector>
