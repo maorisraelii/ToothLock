@@ -10,10 +10,10 @@
   <!-- Enables 100% instant cloud updates on every git push without APK installs! -->
   <!-- ========================================================================= -->
   <script>
-    window.__APP_VERSION__ = "1.0.33";
-    window.__BUILD_TIMESTAMP__ = 1762516000;
+    window.__APP_VERSION__ = "1.0.34";
+    window.__BUILD_TIMESTAMP__ = 1762518000;
     window.__REQUIRED_MIN_NATIVE_BUILD__ = 130;
-    window.__OTA_RELEASE_NOTES__ = "אשף התקנה והגדרה ראשונית חכם (Onboarding), תמיכה מותאמת אישית למשתמשים ללא שעון חכם (Phone-Only Mode), וזיהוי חיבורים אוטומטי.";
+    window.__OTA_RELEASE_NOTES__ = "מצב סודי 'עמרי סבן' 🦨☣️: ערכת נושא TOXIC ירוקה זרחנית, מעקב מקלחת יומית ומד סירחון, ואפשרות שיתוף ישירה להטרלה!";
 
     // 1. BOOTSTRAP CACHED LIVE OTA FROM STORAGE IMMEDIATELY
     (function bootstrapCachedLiveUpdate() {
@@ -55,7 +55,8 @@
               success: '#10B981',
               danger: '#EF4444',
               warning: '#F59E0B',
-              purple: '#8B5CF6'
+              purple: '#8B5CF6',
+              toxic: '#22C55E'
             }
           }
         }
@@ -77,6 +78,7 @@
       padding: 0;
       overflow-x: hidden;
       min-height: 100vh;
+      transition: background-color 0.4s ease, color 0.4s ease;
     }
     .glass-card {
       background: rgba(18, 24, 46, 0.72);
@@ -84,6 +86,7 @@
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      transition: all 0.4s ease;
     }
     .glass-button {
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
@@ -96,12 +99,49 @@
     .pulse-green {
       box-shadow: 0 0 25px rgba(16, 185, 129, 0.45);
     }
+    .pulse-toxic {
+      box-shadow: 0 0 30px rgba(34, 197, 94, 0.55);
+    }
     .nav-active {
       color: #38BDF8;
     }
     .nav-active .nav-indicator {
       opacity: 1;
       transform: scaleX(1);
+    }
+
+    /* ========================================================================= */
+    /* TOXIC "OMRI SABAN" THEME STYLES (מצב עמרי סבן)                            */
+    /* ========================================================================= */
+    body.toxic-mode {
+      background-color: #040D04 !important;
+      color: #DCFCE7 !important;
+    }
+    body.toxic-mode .glass-card {
+      background: rgba(8, 28, 12, 0.78) !important;
+      border: 1px solid rgba(74, 222, 128, 0.28) !important;
+      box-shadow: 0 8px 32px 0 rgba(22, 101, 52, 0.45) !important;
+    }
+    body.toxic-mode header {
+      background-color: rgba(4, 13, 4, 0.9) !important;
+      border-bottom: 1px solid rgba(74, 222, 128, 0.25) !important;
+    }
+    body.toxic-mode nav {
+      background-color: rgba(4, 13, 4, 0.95) !important;
+      border-top: 1px solid rgba(74, 222, 128, 0.25) !important;
+    }
+    body.toxic-mode .nav-active {
+      color: #4ADE80 !important;
+    }
+    body.toxic-mode .nav-indicator {
+      background-color: #4ADE80 !important;
+    }
+    .stench-anim {
+      animation: stenchFloat 2.5s infinite ease-in-out;
+    }
+    @keyframes stenchFloat {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-7px) rotate(4deg); }
     }
   </style>
 </head>
@@ -111,10 +151,10 @@
   <!-- TOP APP BAR -->
   <header class="sticky top-0 z-40 bg-[#090B14]/85 backdrop-blur-md border-b border-white/5 px-5 py-4 flex items-center justify-between">
     <div class="flex items-center gap-2">
-      <span class="text-2xl">🪥</span>
+      <span id="header-logo-icon" class="text-2xl cursor-pointer" onclick="onTitleTap()">🪥</span>
       <div>
-        <h1 class="font-extrabold text-xl tracking-tight text-white flex items-center gap-1.5">
-          ToothLock
+        <h1 onclick="onTitleTap()" class="font-extrabold text-xl tracking-tight text-white flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all">
+          <span id="app-title-text">ToothLock</span>
           <span id="header-mode-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 font-bold border border-sky-500/30">
             ⌚ מצב שעון
           </span>
@@ -135,7 +175,47 @@
     <!-- ==================== TAB 1: HOME ==================== -->
     <section id="tab-home" class="space-y-4">
       
-      <!-- Hero Status Card -->
+      <!-- ==================== OMRI SABAN TOXIC SHOWER TRACKER ==================== -->
+      <div id="card-saban-shower" class="hidden glass-card rounded-3xl p-6 border-2 border-emerald-500/50 shadow-2xl relative overflow-hidden transition-all animate-in fade-in zoom-in-95 duration-300">
+        <div class="absolute -top-16 -right-16 w-36 h-36 bg-emerald-500/20 rounded-full blur-2xl pointer-events-none"></div>
+
+        <div class="relative z-10 flex flex-col items-center text-center">
+          <div class="flex items-center justify-between w-full mb-3">
+            <span class="text-[11px] font-black px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1">
+              <span>☣️</span> מד סירחון יומי: עמרי סבן
+            </span>
+            <span id="saban-streak-text" class="text-xs font-black text-amber-300 flex items-center gap-1">
+              <span>🚿</span> רצף מקלחות: 0 ימים
+            </span>
+          </div>
+
+          <div id="saban-icon" class="text-5xl my-2 stench-anim">🦨</div>
+
+          <h3 id="saban-status-title" class="text-xl font-black text-emerald-400 mt-1">
+            עמרי סבן טרם התקלח היום! 🤢
+          </h3>
+          <p id="saban-status-sub" class="text-xs text-slate-300 mt-1 max-w-xs">
+            מד סירחון: 99.8% (סכנת התעלפות) ☢️ • החלונות בסכנת התנפצות
+          </p>
+
+          <!-- Stench Progress Bar -->
+          <div class="w-full bg-black/40 rounded-full h-3.5 my-4 p-0.5 border border-emerald-500/30 overflow-hidden">
+            <div id="saban-stench-bar" class="h-full rounded-full bg-gradient-to-r from-yellow-500 via-lime-500 to-emerald-500 w-[99%] transition-all duration-500"></div>
+          </div>
+
+          <!-- Toggle Shower Button -->
+          <button id="btn-toggle-saban" onclick="toggleSabanShowered()" class="w-full py-3.5 rounded-2xl font-black text-sm bg-gradient-to-r from-emerald-500 to-green-600 text-black shadow-lg shadow-emerald-500/30 active:scale-95 transition-all">
+            סמן כ'עמרי התקלח וריחני' 🧼🚿
+          </button>
+
+          <!-- WhatsApp Troll Button -->
+          <button onclick="shareSabanTroll()" class="w-full mt-2.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-emerald-500/30 text-emerald-300 font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all">
+            <span>💬 שלח לעמרי סבן בוואטסאפ להטרלה</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Hero Status Card (Teeth) -->
       <div id="hero-card" class="glass-card rounded-3xl p-6 text-center transition-all duration-300 relative overflow-hidden border">
         <div id="hero-glow-bg" class="absolute -top-24 -left-24 w-48 h-48 rounded-full bg-red-500/10 blur-3xl pointer-events-none"></div>
 
@@ -360,6 +440,12 @@
           ⚡ 4. הרץ סימולציית הסלמה מלאה (15 שניות)
         </button>
 
+        <!-- Secret Omri Saban Test Alarm -->
+        <button id="btn-test-saban-alarm" onclick="testSabanBiohazardAlarm()" class="hidden w-full py-3 px-4 rounded-2xl glass-button text-emerald-400 font-bold text-xs flex items-center justify-between active:scale-95 transition-all">
+          <span>☣️ 5. השמע אזעקת סירחון עמרי סבן 🦨</span>
+          <span>▶</span>
+        </button>
+
         <!-- Simulation Progress Indicator -->
         <div id="sim-container" class="hidden p-3 rounded-2xl bg-purple-950/40 border border-purple-500/30 text-center text-xs space-y-2">
           <div id="sim-status-text" class="text-purple-300 font-bold">סימולציה פועלת...</div>
@@ -394,6 +480,22 @@
 
         <button onclick="launchOnboardingWizard()" class="w-full mt-2 py-2.5 rounded-xl glass-button text-amber-300 font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-all">
           <span>🪄 הפעל אשף הגדרה ראשונית מחדש</span>
+        </button>
+      </div>
+
+      <!-- Secret Omri Saban Toxic Mode Card -->
+      <div class="glass-card rounded-3xl p-5 space-y-3 border border-emerald-500/30">
+        <div class="flex items-center justify-between">
+          <h3 class="font-bold text-sm text-emerald-400 flex items-center gap-2">
+            <span>☣️</span> מצב "עמרי סבן" (TOXIC Edition)
+          </h3>
+          <span class="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">מצב סודי 🦨</span>
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          ערכת נושא ירוקה זרחנית של סירחון, מעקב מקלחות יומי של עמרי, ומד סירחון להטרלת חברים! (טיפ: ניתן להפעיל גם בלחיצה 5 פעמים על כותרת האפליקציה).
+        </p>
+        <button id="btn-toggle-saban-mode" onclick="toggleOmriSabanMode()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-green-600 text-black font-black text-xs shadow-md active:scale-95 transition-all">
+          הפעל מצב "עמרי סבן" 🦨☣️
         </button>
       </div>
 
@@ -437,11 +539,11 @@
         <div class="space-y-2 text-xs bg-white/5 p-3.5 rounded-2xl">
           <div class="flex justify-between">
             <span class="text-slate-400">גרסת ממשק ענן (OTA Web):</span>
-            <span id="ota-web-version" class="font-bold text-sky-400 font-mono">v1.0.33</span>
+            <span id="ota-web-version" class="font-bold text-sky-400 font-mono">v1.0.34</span>
           </div>
           <div class="flex justify-between">
             <span class="text-slate-400">גרסת אפליקציה מותקנת (Native):</span>
-            <span id="ota-native-version" class="font-bold text-slate-300 font-mono">Build 134</span>
+            <span id="ota-native-version" class="font-bold text-slate-300 font-mono">Build 136</span>
           </div>
           <div class="flex justify-between">
             <span class="text-slate-400">סנכרון ענן אחרון:</span>
@@ -464,7 +566,7 @@
   </main>
 
   <!-- BOTTOM NAVIGATION BAR -->
-  <nav class="fixed bottom-0 inset-x-0 z-40 bg-[#090B14]/90 backdrop-blur-xl border-t border-white/5 max-w-lg mx-auto">
+  <nav class="fixed bottom-0 inset-x-0 z-50 bg-[#090B14]/90 backdrop-blur-xl border-t border-white/5 max-w-lg mx-auto">
     <div class="grid grid-cols-4 h-20 px-2">
       
       <button onclick="switchTab('home')" id="nav-btn-home" class="flex flex-col items-center justify-center gap-1 nav-active transition-all relative">
@@ -499,7 +601,6 @@
   <!-- ========================================================================= -->
   <div id="onboarding-wizard" class="fixed inset-0 z-50 bg-[#090B14] flex flex-col justify-between p-6 overflow-y-auto hidden">
     
-    <!-- Top Progress Indicators -->
     <div>
       <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
         <span class="font-bold text-sky-400" id="wizard-step-indicator">שלב 1 מתוך 4</span>
@@ -510,7 +611,6 @@
       </div>
     </div>
 
-    <!-- Step Content Containers -->
     <div class="my-auto py-6">
 
       <!-- STEP 1: WELCOME -->
@@ -538,13 +638,12 @@
         </div>
       </div>
 
-      <!-- STEP 2: CHOOSE DEVICE (WATCH OR PHONE) -->
+      <!-- STEP 2: CHOOSE DEVICE -->
       <div id="wizard-step-2" class="space-y-4 hidden text-center">
         <h2 class="text-2xl font-black text-white">האם יש לך שעון חכם?</h2>
         <p class="text-slate-300 text-xs">בחר את המצב המתאים ביותר לשימוש היומיומי שלך:</p>
 
         <div class="space-y-3 pt-2 text-right">
-          <!-- Option 1: Smartwatch -->
           <div id="card-choice-watch" onclick="selectWizardMode(true)" class="p-4 rounded-3xl border-2 border-sky-500 bg-sky-500/15 cursor-pointer transition-all flex items-start gap-4">
             <div class="w-12 h-12 rounded-2xl bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-2xl flex-shrink-0">
               ⌚
@@ -557,7 +656,6 @@
             </div>
           </div>
 
-          <!-- Option 2: Phone Only -->
           <div id="card-choice-phone" onclick="selectWizardMode(false)" class="p-4 rounded-3xl border-2 border-white/10 bg-white/5 cursor-pointer transition-all flex items-start gap-4">
             <div class="w-12 h-12 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center text-2xl flex-shrink-0">
               📱
@@ -572,7 +670,7 @@
         </div>
       </div>
 
-      <!-- STEP 3: HARDWARE & CONNECTION CHECK -->
+      <!-- STEP 3: HARDWARE CHECK -->
       <div id="wizard-step-3" class="space-y-4 hidden">
         <h2 class="text-2xl font-black text-white text-center">בדיקת חיבורים ותאימות 🔍</h2>
         <p class="text-slate-300 text-xs text-center" id="wizard-step-3-subtitle">בודק את המערכת...</p>
@@ -599,7 +697,6 @@
           </div>
         </div>
 
-        <!-- Watch specific guide button in wizard -->
         <div id="wiz-wearable-guide-box" class="p-3.5 rounded-2xl bg-amber-950/40 border border-amber-500/40 text-amber-200 text-xs space-y-2">
           <div class="font-bold text-amber-300">⚠️ טיפ חשוב לבעלי סמסונג:</div>
           <div class="text-[11px] leading-relaxed">
@@ -610,7 +707,6 @@
           </button>
         </div>
 
-        <!-- Quick Test Button in Wizard -->
         <button id="wiz-btn-test" onclick="runWizardTestVibration()" class="w-full py-3 rounded-2xl glass-button text-sky-300 font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all">
           <span>🔔 בצע בדיקת התראה חיה כעת</span>
         </button>
@@ -680,7 +776,14 @@
     let streakCount = 0;
     let targetHour = 23;
     let targetMinute = 0;
-    let hasSmartWatch = true; // true = Watch Mode, false = Phone Only
+    let hasSmartWatch = true;
+
+    // Omri Saban Toxic Stench Mode State
+    let isSabanMode = false;
+    let sabanShoweredToday = false;
+    let sabanShowerStreak = 0;
+    let titleTapCount = 0;
+    let titleTapTimer = null;
 
     // Onboarding Wizard State
     let currentWizardStep = 1;
@@ -692,7 +795,7 @@
     let timerInterval = null;
     let isTimerRunning = false;
 
-    // Web Audio Context for Beeps
+    // Web Audio Context for Beeps & Biohazard Sirens
     let audioCtx = null;
     function playAudioBeep(freq = 880, duration = 0.15) {
       try {
@@ -708,6 +811,25 @@
         gain.connect(audioCtx.destination);
         osc.start();
         osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function playBiohazardAlarm() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(320, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(650, audioCtx.currentTime + 0.3);
+        osc.frequency.linearRampToValueAtTime(320, audioCtx.currentTime + 0.6);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.7);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.7);
       } catch (e) {}
     }
 
@@ -733,6 +855,12 @@
       if (!setupDone) {
         launchOnboardingWizard();
       }
+
+      // Restore Omri Saban state
+      isSabanMode = localStorage.getItem('saban_mode_active') === 'true';
+      sabanShoweredToday = localStorage.getItem('saban_showered_today') === 'true';
+      sabanShowerStreak = Number(localStorage.getItem('saban_shower_streak') || 0);
+      applySabanModeToUi();
 
       // Check OTA in background like PriceRadar
       setTimeout(() => { checkLiveOtaUpdate(false); }, 1500);
@@ -773,6 +901,140 @@
     };
 
     // -------------------------------------------------------------------------
+    // SECRET "OMRI SABAN" TOXIC MODE ENGINE (מצב עמרי סבן)
+    // -------------------------------------------------------------------------
+    function onTitleTap() {
+      titleTapCount++;
+      clearTimeout(titleTapTimer);
+      titleTapTimer = setTimeout(() => { titleTapCount = 0; }, 2500);
+
+      if (titleTapCount >= 5) {
+        titleTapCount = 0;
+        toggleOmriSabanMode();
+      } else if (titleTapCount === 3) {
+        showToast("עוד 2 לחיצות להפעלת מצב סודי... ☣️");
+      }
+    }
+
+    function toggleOmriSabanMode() {
+      isSabanMode = !isSabanMode;
+      localStorage.setItem('saban_mode_active', String(isSabanMode));
+
+      if (isSabanMode) {
+        playBiohazardAlarm();
+        setTimeout(playBiohazardAlarm, 400);
+        showToast("☣️ אזהרת סכנה ביולוגית! הופעל מצב 'עמרי סבן' 🦨");
+      } else {
+        showToast("🌿 חזרת למצב ToothLock הרגיל והנקי.");
+      }
+
+      applySabanModeToUi();
+    }
+
+    function applySabanModeToUi() {
+      const appTitle = document.getElementById('app-title-text');
+      const logoIcon = document.getElementById('header-logo-icon');
+      const modeBadge = document.getElementById('header-mode-badge');
+      const showerCard = document.getElementById('card-saban-shower');
+      const testSabanBtn = document.getElementById('btn-test-saban-alarm');
+      const btnToggleSabanSettings = document.getElementById('btn-toggle-saban-mode');
+
+      if (isSabanMode) {
+        document.body.classList.add('toxic-mode');
+        appTitle.innerText = "SabanLock ☣️";
+        logoIcon.innerText = "🦨";
+        modeBadge.innerText = "TOXIC EDITION ☢️";
+        modeBadge.className = "text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/40 animate-pulse";
+        showerCard.classList.remove('hidden');
+        testSabanBtn.classList.remove('hidden');
+        btnToggleSabanSettings.innerText = "כבה מצב 'עמרי סבן' (חזור לרגיל)";
+        btnToggleSabanSettings.className = "w-full py-3 rounded-2xl bg-red-600/30 border border-red-500/50 text-red-300 font-black text-xs active:scale-95 transition-all";
+      } else {
+        document.body.classList.remove('toxic-mode');
+        appTitle.innerText = "ToothLock";
+        logoIcon.innerText = "🪥";
+        showerCard.classList.add('hidden');
+        testSabanBtn.classList.add('hidden');
+        btnToggleSabanSettings.innerText = "הפעל מצב 'עמרי סבן' 🦨☣️";
+        btnToggleSabanSettings.className = "w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-green-600 text-black font-black text-xs shadow-md active:scale-95 transition-all";
+        applyModeToUi();
+      }
+
+      updateSabanShowerUi();
+    }
+
+    function updateSabanShowerUi() {
+      const icon = document.getElementById('saban-icon');
+      const title = document.getElementById('saban-status-title');
+      const sub = document.getElementById('saban-status-sub');
+      const bar = document.getElementById('saban-stench-bar');
+      const btn = document.getElementById('btn-toggle-saban');
+      const streakText = document.getElementById('saban-streak-text');
+
+      streakText.innerHTML = `<span>🚿</span> רצף מקלחות: ${sabanShowerStreak} ימים`;
+
+      if (sabanShoweredToday) {
+        icon.innerText = "🧼✨";
+        icon.className = "text-5xl my-2";
+        title.innerText = "נס רפואי! עמרי התקלח היום! ✨🚿";
+        title.className = "text-xl font-black text-sky-400 mt-1";
+        sub.innerText = "מד סירחון: 2.1% (נסבל) • האוויר בטוח לנשימה 🌲";
+        bar.style.width = "4%";
+        bar.className = "h-full rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 transition-all duration-500";
+        btn.innerText = "בטל סימון (עמרי חזר להסריח) 🦨";
+        btn.className = "w-full py-3.5 rounded-2xl font-black text-sm bg-red-600/20 text-red-400 border border-red-500/40 active:scale-95 transition-all";
+      } else {
+        icon.innerText = "🦨";
+        icon.className = "text-5xl my-2 stench-anim";
+        title.innerText = "עמרי סבן טרם התקלח היום! 🤢";
+        title.className = "text-xl font-black text-emerald-400 mt-1";
+        sub.innerText = "מד סירחון: 99.8% (סכנת התעלפות) ☢️ • החלונות בסכנת התנפצות";
+        bar.style.width = "99%";
+        bar.className = "h-full rounded-full bg-gradient-to-r from-yellow-500 via-lime-500 to-emerald-500 transition-all duration-500";
+        btn.innerText = "סמן כ'עמרי התקלח וריחני' 🧼🚿";
+        btn.className = "w-full py-3.5 rounded-2xl font-black text-sm bg-gradient-to-r from-emerald-500 to-green-600 text-black shadow-lg shadow-emerald-500/30 active:scale-95 transition-all";
+      }
+    }
+
+    function toggleSabanShowered() {
+      sabanShoweredToday = !sabanShoweredToday;
+      if (sabanShoweredToday) {
+        sabanShowerStreak++;
+        playAudioBeep(1000, 0.2);
+        showToast("🚿 איזה ריח טוב! עמרי סבן התקלח היום!");
+      } else {
+        sabanShowerStreak = Math.max(0, sabanShowerStreak - 1);
+        playBiohazardAlarm();
+        showToast("🦨 אוי לא! עמרי חזר לסירחון של 100%!");
+      }
+
+      localStorage.setItem('saban_showered_today', String(sabanShoweredToday));
+      localStorage.setItem('saban_shower_streak', String(sabanShowerStreak));
+      updateSabanShowerUi();
+    }
+
+    function shareSabanTroll() {
+      const stench = sabanShoweredToday ? "2.1% (נסבל בקושי)" : "100% (סכנת חנק קולקטיבית)";
+      const statusDesc = sabanShoweredToday ? "כן! נס רפואי ✨" : "לא! החלונות בסכנת התנפצות 🤢";
+      const text = encodeURIComponent(
+        `🚨 *דחוף ביותר לעמרי סבן!* 🚨\n\n` +
+        `באפליקציית ToothLock נפתח עליך מעקב מיוחד: *SabanLock - מד סירחון יומי ומעקב מקלחות* 🦨☣️\n\n` +
+        `📊 *מד סירחון נוכחי:* ${stench}\n` +
+        `🚿 *האם התקלח היום:* ${statusDesc}\n` +
+        `🔥 *רצף מקלחות רצוף:* ${sabanShowerStreak} ימים\n\n` +
+        `כנס דחוף לסמן שהתקלחת לפני שיקראו למשרד הבריאות: https://github.com/maorisraelii/ToothLock/releases/latest`
+      );
+      window.location.href = `whatsapp://send?text=${text}`;
+    }
+
+    function testSabanBiohazardAlarm() {
+      playBiohazardAlarm();
+      setTimeout(playBiohazardAlarm, 400);
+      setTimeout(playBiohazardAlarm, 800);
+      showToast("☣️ אזעקת סירחון דרגה 5 הופעלה: עמרי סבן לא התקלח!");
+    }
+
+    // -------------------------------------------------------------------------
     // APP MODE ADAPTATION (WATCH MODE vs PHONE-ONLY MODE)
     // -------------------------------------------------------------------------
     function switchAppMode(toWatchMode) {
@@ -787,6 +1049,8 @@
     }
 
     function applyModeToUi() {
+      if (isSabanMode) return; // Keep toxic theme if active
+
       const modeBadge = document.getElementById('header-mode-badge');
       const heroSubtitle = document.getElementById('hero-subtitle');
 
@@ -808,7 +1072,6 @@
       const btnModePhone = document.getElementById('btn-mode-phone');
 
       if (hasSmartWatch) {
-        // WATCH MODE
         modeBadge.innerText = "⌚ מצב שעון";
         modeBadge.className = "text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 font-bold border border-sky-500/30";
         heroSubtitle.innerText = isBrushed ? "כל הכבוד על השמירה על השיניים! השעון יישאר שקט הלילה." : "השעון ירעיד את היד שלך ברצף פולסים מורגש בשעת היעד.";
@@ -828,7 +1091,6 @@
         btnModeWatch.className = "p-3 rounded-2xl border text-xs font-bold transition-all text-center flex flex-col items-center gap-1.5 border-sky-500 bg-sky-500/20 text-sky-300";
         btnModePhone.className = "p-3 rounded-2xl border text-xs font-bold transition-all text-center flex flex-col items-center gap-1.5 border-white/5 bg-white/5 text-slate-400";
       } else {
-        // PHONE ONLY MODE
         modeBadge.innerText = "📱 טלפון בלבד";
         modeBadge.className = "text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/30";
         heroSubtitle.innerText = isBrushed ? "כל הכבוד! צחצחת היום. הטלפון יישאר שקט הלילה." : "הטלפון יזכיר לך לצחצח עם רטט מורגש והתראה בולטת בשעת היעד.";
@@ -1334,7 +1596,7 @@
         const currentTs = Number(localStorage.getItem('toothlock_live_ota_ts') || window.__BUILD_TIMESTAMP__);
         const installedNativeBuild = (window.ToothLockBridge && window.ToothLockBridge.getNativeBuildCode) 
           ? window.ToothLockBridge.getNativeBuildCode() 
-          : 134;
+          : 136;
 
         document.getElementById('ota-last-sync').innerText = new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
 
