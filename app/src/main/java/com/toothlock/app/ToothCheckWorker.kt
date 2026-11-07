@@ -3,6 +3,7 @@ package com.toothlock.app
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -16,6 +17,7 @@ class ToothCheckWorker(
 
     companion object {
         const val WORK_TAG_DAILY = "daily_tooth_check_work"
+        const val WORK_TAG_FOLLOWUP = "followup_tooth_check_work"
 
         fun scheduleDailyBedtimeCheck(context: Context) {
             val prefs = ToothPreferences(context)
@@ -48,6 +50,15 @@ class ToothCheckWorker(
                 dailyWorkRequest
             )
         }
+
+        fun scheduleFollowUpCheck(context: Context, delayMinutes: Long = 7) {
+            val followUpWork = OneTimeWorkRequestBuilder<ToothCheckWorker>()
+                .setInitialDelay(delayMinutes, TimeUnit.MINUTES)
+                .addTag(WORK_TAG_FOLLOWUP)
+                .build()
+
+            WorkManager.getInstance(context).enqueue(followUpWork)
+        }
     }
 
     override suspend fun doWork(): Result {
@@ -58,17 +69,27 @@ class ToothCheckWorker(
             return Result.success()
         }
 
-        // 2. User has NOT brushed yet!
         val detector = WatchAndSleepDetector(context)
         val isWatchConnected = detector.isSmartWatchConnected()
         val isSleeping = detector.isSleepModeActive()
+        val alertCount = prefs.getAlertCountToday()
 
-        // 3. Send urgent wake-up notification to Galaxy Watch & Phone
-        NotificationHelper.sendToothAlert(
-            context = context,
-            isWatchConnected = isWatchConnected,
-            isSleeping = isSleeping
-        )
+        if (isWatchConnected) {
+            if (alertCount < 3) {
+                // Alert 1, 2, or 3: Watch-Only Multi-Pulse Vibration (Phone stays silent!)
+                val currentAttempt = prefs.incrementAlertCount()
+                NotificationHelper.sendWatchFocusedAlert(context, currentAttempt, isSleeping)
+
+                // Schedule next check in 7 minutes if user still hasn't brushed
+                scheduleFollowUpCheck(context, delayMinutes = 7)
+            } else {
+                // ESCALATION: 3 watch alerts were sent and ignored! Trigger loud phone emergency alarm!
+                NotificationHelper.sendEmergencyPhoneAlarm(context)
+            }
+        } else {
+            // Watch is not connected / not worn: Ring phone alarm directly
+            NotificationHelper.sendEmergencyPhoneAlarm(context)
+        }
 
         return Result.success()
     }

@@ -12,105 +12,93 @@ import android.media.RingtoneManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 object NotificationHelper {
 
-    const val CHANNEL_ID = "tooth_alarm_v3"
+    const val CHANNEL_WATCH = "tooth_watch_channel_v4"
+    const val CHANNEL_EMERGENCY = "tooth_emergency_phone_v4"
     const val NOTIFICATION_ID = 1001
 
-    fun createNotificationChannel(context: Context) {
+    private var pulseJob: Job? = null
+
+    fun createChannels(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationManager =
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-            // Remove legacy channels to ensure fresh alarm settings take effect
-            try {
-                notificationManager.deleteNotificationChannel("tooth_urgent_alerts")
-            } catch (_: Exception) {}
+            // Clean up old channels
+            listOf("tooth_urgent_alerts", "tooth_alarm_v3").forEach {
+                try { notificationManager.deleteNotificationChannel(it) } catch (_: Exception) {}
+            }
 
-            val name = "שעון מעורר צחצוח שיניים (חירום)"
-            val descriptionText = "התראות אזעקה רוטטות חזק לשעון סמסונג ולטלפון"
-            val importance = NotificationManager.IMPORTANCE_HIGH
-
-            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
-                description = descriptionText
+            // 1. Watch-Focused Channel (Silent on phone, triggers haptic bridge on Galaxy Watch)
+            val watchChannel = NotificationChannel(
+                CHANNEL_WATCH,
+                "תזכורת צחצוח לשעון סמסונג (שקט בטלפון)",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "רטט מרובה לשעון סמסונג ללא הרעשת הטלפון"
+                // Minimal 30ms pulse on phone (silent on desk, but triggers Wear OS notification haptic)
                 enableVibration(true)
-                // Aggressive multi-pulse vibration pattern
-                vibrationPattern = longArrayOf(0, 1000, 300, 1000, 300, 1500, 400, 1500)
+                vibrationPattern = longArrayOf(0, 30)
+                setSound(null, null)
+                setBypassDnd(true)
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            }
+            notificationManager.createNotificationChannel(watchChannel)
 
+            // 2. Emergency Escalation Channel for Phone (After 3 missed watch alerts)
+            val emergencyChannel = NotificationChannel(
+                CHANNEL_EMERGENCY,
+                "אזעקת חירום בטלפון (אחרי 3 התראות בשעון)",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "אזעקה רועשת ורטט חזק בטלפון אם המשתמש נרדם"
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 1000, 300, 1000, 300, 1500, 400, 1500)
                 val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
                     ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-
                 val audioAttributes = AudioAttributes.Builder()
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                     .setUsage(AudioAttributes.USAGE_ALARM)
                     .build()
-
                 setSound(alarmSound, audioAttributes)
                 setBypassDnd(true)
                 lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             }
-
-            notificationManager.createNotificationChannel(channel)
+            notificationManager.createNotificationChannel(emergencyChannel)
         }
     }
 
-    fun sendToothAlert(
-        context: Context,
-        isWatchConnected: Boolean = true,
-        isSleeping: Boolean = false
-    ) {
-        createNotificationChannel(context)
+    /**
+     * Sends a long multi-pulse vibration to the Samsung Galaxy Watch while keeping the phone silent!
+     * @param alertIndex Current attempt (1, 2, or 3)
+     */
+    fun sendWatchFocusedAlert(context: Context, alertIndex: Int, isSleeping: Boolean = false) {
+        createChannels(context)
+        pulseJob?.cancel()
 
-        // Intent to open Main Activity
-        val openAppIntent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        val openAppPendingIntent = createOpenAppPendingIntent(context)
+        val brushedPendingIntent = createBrushedPendingIntent(context)
+        val snoozePendingIntent = createSnoozePendingIntent(context)
+
+        val title = when (alertIndex) {
+            1 -> "🪥 תזכורת 1 מתוך 3: זמן לצחצח שיניים!"
+            2 -> "⚠️ תזכורת 2 מתוך 3: אל תירדם! צחצח עכשיו."
+            else -> "🚨 תזכורת 3 אחרונה לשעון! (בקרוב אזעקה בטלפון)"
         }
-        val openAppPendingIntent = PendingIntent.getActivity(
-            context,
-            0,
-            openAppIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
 
-        // Action: Brushed Now!
-        val brushedIntent = Intent(context, NotificationActionReceiver::class.java).apply {
-            action = NotificationActionReceiver.ACTION_BRUSHED_NOW
-        }
-        val brushedPendingIntent = PendingIntent.getBroadcast(
-            context,
-            1,
-            brushedIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        // Action: Snooze 10 mins
-        val snoozeIntent = Intent(context, NotificationActionReceiver::class.java).apply {
-            action = NotificationActionReceiver.ACTION_SNOOZE
-        }
-        val snoozePendingIntent = PendingIntent.getBroadcast(
-            context,
-            2,
-            snoozeIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val title = if (isSleeping) {
-            "🚨 התעורר לצחצח שיניים!"
+        val body = if (isSleeping) {
+            "השעון זיהה שנרדמת! רטט מתמשך על היד - קום לצחצח."
         } else {
-            "🪥 זמן לצחצח שיניים לפני השינה!"
+            "רטט ממושך על פרק כף היד. לחץ 'צחצחתי' כדי לבטל."
         }
 
-        val body = when {
-            isSleeping -> "השעון זיהה שנרדמת בלי לצחצח! קום עכשיו ל-2 דקות כדי שלא תתעורר ב-3 בלילה."
-            isWatchConnected -> "השעון רוטט כדי להזכיר לך לצחצח עכשיו לפני שתרדם."
-            else -> "טרם סימנת שצחצחת שיניים היום. אל תירדם ככה!"
-        }
-
-        val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-
-        // Wearable specific actions for Samsung Galaxy Watch (keeps screen awake & shows actions)
         val wearableExtender = NotificationCompat.WearableExtender()
             .setHintScreenTimeout(NotificationCompat.WearableExtender.SCREEN_TIMEOUT_LONG)
             .addAction(
@@ -123,45 +111,121 @@ object NotificationHelper {
             .addAction(
                 NotificationCompat.Action.Builder(
                     R.drawable.ic_toothbrush,
-                    "נודניק (10 דק')",
+                    "נודניק (7 דק')",
                     snoozePendingIntent
                 ).build()
             )
 
-        val notificationBuilder = NotificationCompat.Builder(context, CHANNEL_ID)
+        val builder = NotificationCompat.Builder(context, CHANNEL_WATCH)
             .setSmallIcon(R.drawable.ic_toothbrush)
             .setContentTitle(title)
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setPriority(NotificationCompat.PRIORITY_MAX)
-            // CATEGORY_ALARM forces the notification through Samsung Sleep/Bedtime DND mode!
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setContentIntent(openAppPendingIntent)
-            // FullScreenIntent elevates to incoming call/alarm behavior on Wear OS & Phone!
+            .setAutoCancel(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .addAction(R.drawable.ic_check, "צחצחתי! 🪥", brushedPendingIntent)
+            .addAction(R.drawable.ic_toothbrush, "נודניק 7 דק'", snoozePendingIntent)
+            .extend(wearableExtender)
+
+        val notificationManager = NotificationManagerCompat.from(context)
+
+        // Multi-pulse loop: Sends 5 distinct haptic buzzes spaced 1.6s apart to the watch wrist (~8 seconds total)
+        pulseJob = CoroutineScope(Dispatchers.Default).launch {
+            val prefs = ToothPreferences(context)
+            try {
+                for (pulse in 1..5) {
+                    if (prefs.isBrushedToday()) break
+                    notificationManager.notify(NOTIFICATION_ID, builder.build())
+                    delay(1600)
+                }
+            } catch (_: Exception) {}
+        }
+    }
+
+    /**
+     * Emergency Escalation: Triggered when 3 watch alerts have been sent with no response!
+     * Loud sound and violent phone vibration to wake up the sleeping user.
+     */
+    fun sendEmergencyPhoneAlarm(context: Context) {
+        createChannels(context)
+        pulseJob?.cancel()
+
+        val openAppPendingIntent = createOpenAppPendingIntent(context)
+        val brushedPendingIntent = createBrushedPendingIntent(context)
+
+        val title = "💥 אזעקת חירום: לא צחצחת שיניים!"
+        val body = "התקבלו 3 תזכורות רוטטות בשעון ללא מענה! קום עכשיו ל-2 דקות כדי שלא תתעורר ב-3 בלילה."
+
+        val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+
+        val builder = NotificationCompat.Builder(context, CHANNEL_EMERGENCY)
+            .setSmallIcon(R.drawable.ic_toothbrush)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setContentIntent(openAppPendingIntent)
             .setFullScreenIntent(openAppPendingIntent, true)
             .setAutoCancel(true)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setSound(alarmSound, AudioManager.STREAM_ALARM)
             .setVibrate(longArrayOf(0, 1000, 300, 1000, 300, 1500, 400, 1500))
-            .addAction(R.drawable.ic_check, "צחצחתי! 🪥", brushedPendingIntent)
-            .addAction(R.drawable.ic_toothbrush, "נודניק 10 דק'", snoozePendingIntent)
-            .extend(wearableExtender)
+            .addAction(R.drawable.ic_check, "צחצחתי עכשיו! 🪥 (כבה אזעקה)", brushedPendingIntent)
 
-        val notification = notificationBuilder.build().apply {
-            // FLAG_INSISTENT causes sound and vibration to repeat like an alarm until interacted with
+        val notification = builder.build().apply {
             flags = flags or Notification.FLAG_INSISTENT
         }
 
         try {
             val notificationManager = NotificationManagerCompat.from(context)
             notificationManager.notify(NOTIFICATION_ID, notification)
-        } catch (_: SecurityException) {
-            // Android 13+ permission check handled in MainActivity
-        }
+        } catch (_: SecurityException) {}
     }
 
     fun cancelNotification(context: Context) {
+        pulseJob?.cancel()
         val notificationManager = NotificationManagerCompat.from(context)
         notificationManager.cancel(NOTIFICATION_ID)
+    }
+
+    private fun createOpenAppPendingIntent(context: Context): PendingIntent {
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        return PendingIntent.getActivity(
+            context,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    }
+
+    private fun createBrushedPendingIntent(context: Context): PendingIntent {
+        val intent = Intent(context, NotificationActionReceiver::class.java).apply {
+            action = NotificationActionReceiver.ACTION_BRUSHED_NOW
+        }
+        return PendingIntent.getBroadcast(
+            context,
+            1,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    }
+
+    private fun createSnoozePendingIntent(context: Context): PendingIntent {
+        val intent = Intent(context, NotificationActionReceiver::class.java).apply {
+            action = NotificationActionReceiver.ACTION_SNOOZE
+        }
+        return PendingIntent.getBroadcast(
+            context,
+            2,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
     }
 }

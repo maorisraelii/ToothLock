@@ -34,6 +34,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnChangeTime: MaterialButton
     private lateinit var btnPinWidget: MaterialButton
     private lateinit var btnTestNotification: MaterialButton
+    private lateinit var btnTestEmergency: MaterialButton
     private lateinit var btnCheckUpdate: MaterialButton
     private lateinit var cardStatus: MaterialCardView
 
@@ -84,6 +85,7 @@ class MainActivity : AppCompatActivity() {
         btnChangeTime = findViewById(R.id.btn_change_time)
         btnPinWidget = findViewById(R.id.btn_pin_widget)
         btnTestNotification = findViewById(R.id.btn_test_notification)
+        btnTestEmergency = findViewById(R.id.btn_test_emergency)
         btnCheckUpdate = findViewById(R.id.btn_check_update)
         cardStatus = findViewById(R.id.card_status)
     }
@@ -151,18 +153,31 @@ class MainActivity : AppCompatActivity() {
             pinHomeScreenWidget()
         }
 
-        // Test notification immediately
+        // Test watch vibration (Silent on phone, pulsing haptic on watch)
         btnTestNotification.setOnClickListener {
             lifecycleScope.launch {
-                val isConnected = detector.isSmartWatchConnected()
                 val isSleeping = detector.isSleepModeActive()
-                NotificationHelper.sendToothAlert(
+                NotificationHelper.sendWatchFocusedAlert(
                     context = this@MainActivity,
-                    isWatchConnected = isConnected,
+                    alertIndex = 1,
                     isSleeping = isSleeping
                 )
-                Toast.makeText(this@MainActivity, "נשלחה התראת בדיקה לשעון ולטלפון! בדוק את היד שלך ⌚", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    this@MainActivity,
+                    "נשלח רטט ממושך לשעון! הטלפון שקט כדי לא להרעיש ⌚✨",
+                    Toast.LENGTH_LONG
+                ).show()
             }
+        }
+
+        // Test emergency phone alarm (Escalation after 3 ignored watch alerts)
+        btnTestEmergency.setOnClickListener {
+            NotificationHelper.sendEmergencyPhoneAlarm(this@MainActivity)
+            Toast.makeText(
+                this@MainActivity,
+                "מופעלת אזעקת חירום בטלפון (כפי שתופעל אם לא תצחצח אחרי 3 תזכורות)!",
+                Toast.LENGTH_LONG
+            ).show()
         }
 
         // Check for updates manually
