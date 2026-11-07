@@ -29,6 +29,8 @@ class ToothPreferences(context: Context) {
         private const val KEY_ALERT_INTERVAL = "pref_alert_interval"
         private const val KEY_PULSE_COUNT = "pref_watch_pulse_count"
         private const val KEY_MOTION_CANCEL = "pref_motion_cancel"
+        private const val KEY_SETUP_COMPLETED = "pref_setup_completed"
+        private const val KEY_HAS_SMARTWATCH = "pref_has_smartwatch"
 
         /**
          * Shift the day backwards by 4 hours so the status resets at 04:00 AM instead of 00:00.
@@ -172,4 +174,12 @@ class ToothPreferences(context: Context) {
     var enableMotionCancellation: Boolean
         get() = prefs.getBoolean(KEY_MOTION_CANCEL, true)
         set(value) = prefs.edit().putBoolean(KEY_MOTION_CANCEL, value).apply()
+
+    var isSetupCompleted: Boolean
+        get() = prefs.getBoolean(KEY_SETUP_COMPLETED, false)
+        set(value) = prefs.edit().putBoolean(KEY_SETUP_COMPLETED, value).apply()
+
+    var hasSmartWatch: Boolean
+        get() = prefs.getBoolean(KEY_HAS_SMARTWATCH, true)
+        set(value) = prefs.edit().putBoolean(KEY_HAS_SMARTWATCH, value).apply()
 }
