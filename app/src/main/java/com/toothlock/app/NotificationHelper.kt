@@ -12,6 +12,8 @@ import android.media.RingtoneManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.google.android.gms.tasks.Tasks
+import com.google.android.gms.wearable.Wearable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -20,7 +22,7 @@ import kotlinx.coroutines.launch
 
 object NotificationHelper {
 
-    const val CHANNEL_WATCH = "tooth_watch_channel_v4"
+    const val CHANNEL_WATCH = "tooth_watch_silent_phone_v5"
     const val CHANNEL_EMERGENCY = "tooth_emergency_phone_v4"
     const val NOTIFICATION_ID = 1001
 
@@ -32,20 +34,19 @@ object NotificationHelper {
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
             // Clean up old channels
-            listOf("tooth_urgent_alerts", "tooth_alarm_v3").forEach {
+            listOf("tooth_urgent_alerts", "tooth_alarm_v3", "tooth_watch_channel_v4").forEach {
                 try { notificationManager.deleteNotificationChannel(it) } catch (_: Exception) {}
             }
 
-            // 1. Watch-Focused Channel (Silent on phone, triggers haptic bridge on Galaxy Watch)
+            // 1. Watch-Focused Channel: STRICTLY SILENT ON PHONE, zero vibration on phone!
             val watchChannel = NotificationChannel(
                 CHANNEL_WATCH,
-                "תזכורת צחצוח לשעון סמסונג (שקט בטלפון)",
+                "תזכורת צחצוח לשעון סמסונג (שקט מוחלט בטלפון)",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "רטט מרובה לשעון סמסונג ללא הרעשת הטלפון"
-                // Minimal 30ms pulse on phone (silent on desk, but triggers Wear OS notification haptic)
-                enableVibration(true)
-                vibrationPattern = longArrayOf(0, 30)
+                description = "רטט מרובה לשעון סמסונג - הטלפון שקט וללא שום רטט"
+                enableVibration(false)
+                vibrationPattern = null
                 setSound(null, null)
                 setBypassDnd(true)
                 lockscreenVisibility = Notification.VISIBILITY_PUBLIC
@@ -125,6 +126,9 @@ object NotificationHelper {
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setContentIntent(openAppPendingIntent)
             .setAutoCancel(true)
+            .setLocalOnly(false)
+            .setSound(null)
+            .setVibrate(null)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .addAction(R.drawable.ic_check, "צחצחתי! 🪥", brushedPendingIntent)
             .addAction(R.drawable.ic_toothbrush, "נודניק 7 דק'", snoozePendingIntent)
@@ -132,13 +136,28 @@ object NotificationHelper {
 
         val notificationManager = NotificationManagerCompat.from(context)
 
-        // Multi-pulse loop: Sends 5 distinct haptic buzzes spaced 1.6s apart to the watch wrist (~8 seconds total)
-        pulseJob = CoroutineScope(Dispatchers.Default).launch {
+        // Notify once so notification bridge appears on watch
+        try {
+            notificationManager.notify(NOTIFICATION_ID, builder.build())
+        } catch (_: Exception) {}
+
+        // Multi-pulse loop: Sends direct vibration commands to Wear OS nodes over Google Play Services
+        // This ensures the watch vibrates directly even if phone screen is on, and the phone stays 100% silent!
+        pulseJob = CoroutineScope(Dispatchers.IO).launch {
             val prefs = ToothPreferences(context)
             try {
+                val nodeClient = Wearable.getNodeClient(context)
+                val nodes = Tasks.await(nodeClient.connectedNodes)
+                val messageClient = Wearable.getMessageClient(context)
+                val payload = "pulse".toByteArray(Charsets.UTF_8)
+
                 for (pulse in 1..5) {
                     if (prefs.isBrushedToday()) break
-                    notificationManager.notify(NOTIFICATION_ID, builder.build())
+                    for (node in nodes) {
+                        try {
+                            Tasks.await(messageClient.sendMessage(node.id, "/vibrate_pulse", payload))
+                        } catch (_: Exception) {}
+                    }
                     delay(1600)
                 }
             } catch (_: Exception) {}

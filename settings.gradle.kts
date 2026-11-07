@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "ToothLock"
 include(":app")
+include(":wear")
