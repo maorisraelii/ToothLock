@@ -10,10 +10,10 @@
   <!-- Enables 100% instant cloud updates on every git push without APK installs! -->
   <!-- ========================================================================= -->
   <script>
-    window.__APP_VERSION__ = "1.0.32";
-    window.__BUILD_TIMESTAMP__ = 1762514800;
+    window.__APP_VERSION__ = "1.0.33";
+    window.__BUILD_TIMESTAMP__ = 1762516000;
     window.__REQUIRED_MIN_NATIVE_BUILD__ = 130;
-    window.__OTA_RELEASE_NOTES__ = "ביטול מוחלט של רטט בטלפון! הטלפון 100% שקט ודומם, ורטט מועבר בלעדית לשעון Galaxy Watch ב-4 פולסים מתמשכים.";
+    window.__OTA_RELEASE_NOTES__ = "אשף התקנה והגדרה ראשונית חכם (Onboarding), תמיכה מותאמת אישית למשתמשים ללא שעון חכם (Phone-Only Mode), וזיהוי חיבורים אוטומטי.";
 
     // 1. BOOTSTRAP CACHED LIVE OTA FROM STORAGE IMMEDIATELY
     (function bootstrapCachedLiveUpdate() {
@@ -115,7 +115,9 @@
       <div>
         <h1 class="font-extrabold text-xl tracking-tight text-white flex items-center gap-1.5">
           ToothLock
-          <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-sky-500/20 text-sky-400 font-mono font-medium border border-sky-500/30">OTA Live</span>
+          <span id="header-mode-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 font-bold border border-sky-500/30">
+            ⌚ מצב שעון
+          </span>
         </h1>
       </div>
     </div>
@@ -145,7 +147,7 @@
           <h2 id="hero-title" class="text-2xl font-black text-red-400 tracking-tight">
             טרם צחצחת שיניים היום!
           </h2>
-          <p id="hero-subtitle" class="text-slate-400 text-xs mt-1.5 max-w-[260px]">
+          <p id="hero-subtitle" class="text-slate-400 text-xs mt-1.5 max-w-[280px]">
             השעון ירעיד את היד שלך ברצף פולסים מורגש בשעת היעד.
           </p>
 
@@ -155,24 +157,26 @@
         </div>
       </div>
 
-      <!-- Live Connection Chips -->
+      <!-- Live Connection / Device Chips (Adaptive by Mode) -->
       <div class="grid grid-cols-2 gap-3">
+        <!-- Chip 1: Watch or Phone -->
         <div class="glass-card rounded-2xl p-3.5 flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-xl">
+          <div id="chip-1-icon" class="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-xl">
             ⌚
           </div>
           <div class="overflow-hidden">
-            <div class="text-[11px] text-slate-400 font-medium">Galaxy Watch</div>
+            <div id="chip-1-title" class="text-[11px] text-slate-400 font-medium">Galaxy Watch</div>
             <div id="chip-watch-status" class="text-xs font-bold text-sky-300 truncate">בודק חיבור...</div>
           </div>
         </div>
 
+        <!-- Chip 2: Sleep Mode or Target Time -->
         <div class="glass-card rounded-2xl p-3.5 flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-xl">
+          <div id="chip-2-icon" class="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-xl">
             🌙
           </div>
           <div class="overflow-hidden">
-            <div class="text-[11px] text-slate-400 font-medium">מצב שינה</div>
+            <div id="chip-2-title" class="text-[11px] text-slate-400 font-medium">מצב שינה</div>
             <div id="chip-sleep-status" class="text-xs font-bold text-purple-300">ער / לא פעיל</div>
           </div>
         </div>
@@ -253,11 +257,11 @@
       </div>
     </section>
 
-    <!-- ==================== TAB 3: TEST LAB ==================== -->
+    <!-- ==================== TAB 3: TEST LAB (Adaptive) ==================== -->
     <section id="tab-lab" class="space-y-4 hidden">
       
-      <!-- Samsung Galaxy Wearable Configuration Guide Banner -->
-      <div class="rounded-3xl p-5 bg-gradient-to-br from-amber-950/60 to-yellow-950/40 border border-amber-500/40 text-amber-200">
+      <!-- Samsung Galaxy Wearable Configuration Guide Banner (Only in Watch Mode) -->
+      <div id="lab-wearable-guide-card" class="rounded-3xl p-5 bg-gradient-to-br from-amber-950/60 to-yellow-950/40 border border-amber-500/40 text-amber-200">
         <div class="flex items-start gap-3">
           <span class="text-2xl">⚠️</span>
           <div>
@@ -267,10 +271,26 @@
               1. פתח את Galaxy Wearable בלחיצה למטה<br>
               2. היכנס ל: הגדרות שעון ◄ התראות ◄ התראות יישומים<br>
               3. הפעל את המתג של <strong>ToothLock</strong><br>
-              4. הפעל 'השתק טלפון מחובר' (כדי שרק השעון ירטוט)
+              4. פתח 'התראות מתקדמות' והפעל <strong>'הצג התראות גם כשהטלפון בשימוש'</strong>
             </p>
             <button onclick="openWearable()" class="mt-3.5 w-full py-2.5 px-4 rounded-xl bg-amber-500 text-black font-extrabold text-xs tracking-wide shadow-md active:scale-95 transition-all">
               🚀 פתח את Galaxy Wearable עכשיו
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phone-Only Mode Banner (Only in Phone Mode) -->
+      <div id="lab-phone-only-banner" class="hidden rounded-3xl p-5 bg-gradient-to-br from-sky-950/60 to-indigo-950/40 border border-sky-500/40 text-sky-200">
+        <div class="flex items-start gap-3">
+          <span class="text-2xl">📱</span>
+          <div>
+            <h3 class="font-bold text-sm text-sky-300">פועל במצב טלפון בלבד</h3>
+            <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+              האפליקציה מוגדרת לפעול ישירות על גבי הטלפון שלך. ההתראות והרטט יגיעו ישירות למכשיר זה.
+            </p>
+            <button onclick="switchAppMode(true)" class="mt-3 py-2 px-3.5 rounded-xl bg-sky-500/20 border border-sky-500/40 text-sky-300 font-bold text-xs active:scale-95 transition-all">
+              ⌚ רכשת שעון חכם? עבור למצב שעון
             </button>
           </div>
         </div>
@@ -285,17 +305,21 @@
           <button onclick="refreshDiagnostics()" class="text-xs text-sky-400 font-bold">רענן 🔄</button>
         </div>
         <div class="space-y-2 text-xs">
-          <div class="flex justify-between py-1.5 border-b border-white/5">
+          <div id="lab-row-watch-name" class="flex justify-between py-1.5 border-b border-white/5">
             <span class="text-slate-400">שעון סמסונג מזוהה:</span>
             <span id="lab-watch-name" class="font-bold text-slate-200">בודק...</span>
           </div>
-          <div class="flex justify-between py-1.5 border-b border-white/5">
+          <div id="lab-row-watch-conn" class="flex justify-between py-1.5 border-b border-white/5">
             <span class="text-slate-400">סטטוס חיבור בלוטות':</span>
             <span id="lab-watch-conn" class="font-bold text-slate-200">בודק...</span>
           </div>
-          <div class="flex justify-between py-1.5">
+          <div id="lab-row-sleep-status" class="flex justify-between py-1.5 border-b border-white/5">
             <span class="text-slate-400">מצב שינה (Sleep Mode):</span>
             <span id="lab-sleep-status" class="font-bold text-slate-200">בודק...</span>
+          </div>
+          <div class="flex justify-between py-1.5">
+            <span class="text-slate-400">מצב הפעולה הנוכחי:</span>
+            <span id="lab-current-mode" class="font-bold text-sky-400">מצב שעון חכם ⌚</span>
           </div>
         </div>
       </div>
@@ -303,18 +327,29 @@
       <!-- Test Actions -->
       <div class="glass-card rounded-3xl p-5 space-y-3">
         <h3 class="font-bold text-sm text-white flex items-center gap-2">
-          <span>🧪</span> בדיקות רטט והסלמה
+          <span>🧪</span> בדיקות התראה והסלמה
         </h3>
 
-        <button onclick="testWatchAlertDirect()" class="w-full py-3 px-4 rounded-2xl glass-button text-sky-300 font-bold text-xs flex items-center justify-between active:scale-95 transition-all">
-          <span>⌚ 1. בדיקת רטט מיידית לשעון (טלפון שקט)</span>
-          <span>▶</span>
-        </button>
+        <!-- Watch Buttons -->
+        <div id="lab-watch-tests" class="space-y-3">
+          <button onclick="testWatchAlertDirect()" class="w-full py-3 px-4 rounded-2xl glass-button text-sky-300 font-bold text-xs flex items-center justify-between active:scale-95 transition-all">
+            <span>⌚ 1. בדיקת רטט מיידית לשעון (טלפון שקט 100%)</span>
+            <span>▶</span>
+          </button>
 
-        <button onclick="testWatchAlertDelayed()" class="w-full py-3 px-4 rounded-2xl glass-button text-amber-300 font-bold text-xs flex items-center justify-between active:scale-95 transition-all">
-          <span>🔒 2. בדיקה מושהית: כבה מסך תוך 3 שניות</span>
-          <span>▶</span>
-        </button>
+          <button onclick="testWatchAlertDelayed()" class="w-full py-3 px-4 rounded-2xl glass-button text-amber-300 font-bold text-xs flex items-center justify-between active:scale-95 transition-all">
+            <span>🔒 2. בדיקה מושהית: כבה מסך תוך 3 שניות</span>
+            <span>▶</span>
+          </button>
+        </div>
+
+        <!-- Phone-Only Test Button -->
+        <div id="lab-phone-tests" class="hidden">
+          <button onclick="testPhoneAlertDirect()" class="w-full py-3 px-4 rounded-2xl glass-button text-emerald-400 font-bold text-xs flex items-center justify-between active:scale-95 transition-all">
+            <span>📱 1. בדיקת התראה ורטט מורגש בטלפון</span>
+            <span>▶</span>
+          </button>
+        </div>
 
         <button onclick="testPhoneAlarm()" class="w-full py-3 px-4 rounded-2xl glass-button text-red-400 font-bold text-xs flex items-center justify-between active:scale-95 transition-all">
           <span>🚨 3. בדיקת אזעקת חירום בטלפון (שלב 4)</span>
@@ -339,12 +374,35 @@
     <!-- ==================== TAB 4: SETTINGS & OTA ==================== -->
     <section id="tab-settings" class="space-y-4 hidden">
       
+      <!-- Mode Switcher (Watch vs Phone) -->
+      <div class="glass-card rounded-3xl p-5 space-y-3">
+        <h3 class="font-bold text-sm text-white flex items-center gap-2">
+          <span>🔄</span> מצב שימוש באפליקציה
+        </h3>
+        <p class="text-xs text-slate-400">התאם את ToothLock לציוד שברשותך:</p>
+        
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button id="btn-mode-watch" onclick="switchAppMode(true)" class="p-3 rounded-2xl border text-xs font-bold transition-all text-center flex flex-col items-center gap-1.5 border-sky-500 bg-sky-500/20 text-sky-300">
+            <span class="text-xl">⌚</span>
+            <span>מצב שעון חכם</span>
+          </button>
+          <button id="btn-mode-phone" onclick="switchAppMode(false)" class="p-3 rounded-2xl border text-xs font-bold transition-all text-center flex flex-col items-center gap-1.5 border-white/5 bg-white/5 text-slate-400">
+            <span class="text-xl">📱</span>
+            <span>מצב טלפון בלבד</span>
+          </button>
+        </div>
+
+        <button onclick="launchOnboardingWizard()" class="w-full mt-2 py-2.5 rounded-xl glass-button text-amber-300 font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-all">
+          <span>🪄 הפעל אשף הגדרה ראשונית מחדש</span>
+        </button>
+      </div>
+
       <!-- Bedtime Target -->
       <div class="glass-card rounded-3xl p-5 space-y-3">
         <h3 class="font-bold text-sm text-white flex items-center gap-2">
           <span>⏰</span> שעת יעד לשינה (שעת התזכורת)
         </h3>
-        <p class="text-xs text-slate-400">בשעה זו תישלח ההתראה הראשונה לשעון אם לא סומן צחצוח.</p>
+        <p class="text-xs text-slate-400">בשעה זו תישלח ההתראה הראשונה אם לא סומן צחצוח.</p>
         <div class="flex items-center gap-3">
           <input type="time" id="input-target-time" value="23:00" class="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white font-mono text-base font-bold focus:outline-none focus:border-sky-500 flex-1" />
           <button onclick="saveTargetBedtime()" class="py-2.5 px-5 rounded-xl bg-sky-500 text-white font-bold text-xs active:scale-95 transition-all">
@@ -379,11 +437,11 @@
         <div class="space-y-2 text-xs bg-white/5 p-3.5 rounded-2xl">
           <div class="flex justify-between">
             <span class="text-slate-400">גרסת ממשק ענן (OTA Web):</span>
-            <span id="ota-web-version" class="font-bold text-sky-400 font-mono">v1.0.31</span>
+            <span id="ota-web-version" class="font-bold text-sky-400 font-mono">v1.0.33</span>
           </div>
           <div class="flex justify-between">
             <span class="text-slate-400">גרסת אפליקציה מותקנת (Native):</span>
-            <span id="ota-native-version" class="font-bold text-slate-300 font-mono">Build 130</span>
+            <span id="ota-native-version" class="font-bold text-slate-300 font-mono">Build 134</span>
           </div>
           <div class="flex justify-between">
             <span class="text-slate-400">סנכרון ענן אחרון:</span>
@@ -406,7 +464,7 @@
   </main>
 
   <!-- BOTTOM NAVIGATION BAR -->
-  <nav class="fixed bottom-0 inset-x-0 z-50 bg-[#090B14]/90 backdrop-blur-xl border-t border-white/5 max-w-lg mx-auto">
+  <nav class="fixed bottom-0 inset-x-0 z-40 bg-[#090B14]/90 backdrop-blur-xl border-t border-white/5 max-w-lg mx-auto">
     <div class="grid grid-cols-4 h-20 px-2">
       
       <button onclick="switchTab('home')" id="nav-btn-home" class="flex flex-col items-center justify-center gap-1 nav-active transition-all relative">
@@ -435,6 +493,155 @@
 
     </div>
   </nav>
+
+  <!-- ========================================================================= -->
+  <!-- FULL SCREEN ONBOARDING WIZARD MODAL (אשף התקנה והגדרה ראשונית)           -->
+  <!-- ========================================================================= -->
+  <div id="onboarding-wizard" class="fixed inset-0 z-50 bg-[#090B14] flex flex-col justify-between p-6 overflow-y-auto hidden">
+    
+    <!-- Top Progress Indicators -->
+    <div>
+      <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+        <span class="font-bold text-sky-400" id="wizard-step-indicator">שלב 1 מתוך 4</span>
+        <button onclick="skipOnboarding()" class="text-slate-500 hover:text-slate-300">דלג ✕</button>
+      </div>
+      <div class="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
+        <div id="wizard-progress-bar" class="bg-gradient-to-r from-sky-400 to-blue-500 h-full w-1/4 transition-all duration-300"></div>
+      </div>
+    </div>
+
+    <!-- Step Content Containers -->
+    <div class="my-auto py-6">
+
+      <!-- STEP 1: WELCOME -->
+      <div id="wizard-step-1" class="text-center space-y-4">
+        <div class="w-24 h-24 rounded-3xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-5xl mx-auto pulse-glow shadow-xl">
+          🪥
+        </div>
+        <h2 class="text-2xl font-black text-white">ברוכים הבאים ל-ToothLock!</h2>
+        <p class="text-slate-300 text-sm max-w-sm mx-auto leading-relaxed">
+          האפליקציה החכמה שתוודא שלעולם לא תירדם בלי לצחצח שיניים.
+        </p>
+        <div class="bg-white/5 border border-white/5 rounded-2xl p-4 text-xs text-slate-400 max-w-xs mx-auto text-right space-y-2">
+          <div class="flex items-center gap-2">
+            <span class="text-emerald-400 font-bold">✓</span>
+            <span>תזכורות מותאמות אישית לציוד שלך</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-emerald-400 font-bold">✓</span>
+            <span>אזעקת גיבוי מונעת הירדמות</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-emerald-400 font-bold">✓</span>
+            <span>טיימר צחצוח חכם וספירת רצף ימים</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: CHOOSE DEVICE (WATCH OR PHONE) -->
+      <div id="wizard-step-2" class="space-y-4 hidden text-center">
+        <h2 class="text-2xl font-black text-white">האם יש לך שעון חכם?</h2>
+        <p class="text-slate-300 text-xs">בחר את המצב המתאים ביותר לשימוש היומיומי שלך:</p>
+
+        <div class="space-y-3 pt-2 text-right">
+          <!-- Option 1: Smartwatch -->
+          <div id="card-choice-watch" onclick="selectWizardMode(true)" class="p-4 rounded-3xl border-2 border-sky-500 bg-sky-500/15 cursor-pointer transition-all flex items-start gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-2xl flex-shrink-0">
+              ⌚
+            </div>
+            <div>
+              <h4 class="font-extrabold text-sm text-sky-200">יש לי שעון חכם (Galaxy Watch / Wear OS)</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                ההתראה תרעיד אך ורק את השעון שעל ידך כשהטלפון שקט ב-100%! אזעקה בטלפון תופעל רק אם התעלמת מ-3 רעידות בשעון.
+              </p>
+            </div>
+          </div>
+
+          <!-- Option 2: Phone Only -->
+          <div id="card-choice-phone" onclick="selectWizardMode(false)" class="p-4 rounded-3xl border-2 border-white/10 bg-white/5 cursor-pointer transition-all flex items-start gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center text-2xl flex-shrink-0">
+              📱
+            </div>
+            <div>
+              <h4 class="font-extrabold text-sm text-white">אין לי שעון — שימוש בטלפון בלבד</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                התראות עם צליל ורטט מורגש ישירות בטלפון, נעילת מסך חכמה, ווידג'ט מסך הבית וטיימר 2 דקות.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: HARDWARE & CONNECTION CHECK -->
+      <div id="wizard-step-3" class="space-y-4 hidden">
+        <h2 class="text-2xl font-black text-white text-center">בדיקת חיבורים ותאימות 🔍</h2>
+        <p class="text-slate-300 text-xs text-center" id="wizard-step-3-subtitle">בודק את המערכת...</p>
+
+        <div class="space-y-2.5 text-xs bg-white/5 p-4 rounded-3xl border border-white/5">
+          <div class="flex items-center justify-between py-1.5 border-b border-white/5">
+            <span class="text-slate-300">הרשאת התראות בטלפון:</span>
+            <span id="wiz-check-notif" class="font-bold text-emerald-400">✓ מאושר</span>
+          </div>
+
+          <div id="wiz-row-bluetooth" class="flex items-center justify-between py-1.5 border-b border-white/5">
+            <span class="text-slate-300">קישוריות בלוטות':</span>
+            <span id="wiz-check-bt" class="font-bold text-sky-400">✓ מופעל</span>
+          </div>
+
+          <div id="wiz-row-watch" class="flex items-center justify-between py-1.5 border-b border-white/5">
+            <span class="text-slate-300">זיהוי שעון חכם:</span>
+            <span id="wiz-check-watch" class="font-bold text-slate-200">סורק...</span>
+          </div>
+
+          <div class="flex items-center justify-between py-1.5">
+            <span class="text-slate-300">מנוע רטט מותאם:</span>
+            <span id="wiz-check-vibe" class="font-bold text-emerald-400">✓ מוכן לפעולה</span>
+          </div>
+        </div>
+
+        <!-- Watch specific guide button in wizard -->
+        <div id="wiz-wearable-guide-box" class="p-3.5 rounded-2xl bg-amber-950/40 border border-amber-500/40 text-amber-200 text-xs space-y-2">
+          <div class="font-bold text-amber-300">⚠️ טיפ חשוב לבעלי סמסונג:</div>
+          <div class="text-[11px] leading-relaxed">
+            ודא שב-Galaxy Wearable -> הגדרות שעון -> התראות -> מתג ToothLock מופעל!
+          </div>
+          <button onclick="openWearable()" class="w-full py-2 rounded-xl bg-amber-500 text-black font-extrabold text-xs">
+            פתח את Galaxy Wearable עכשיו
+          </button>
+        </div>
+
+        <!-- Quick Test Button in Wizard -->
+        <button id="wiz-btn-test" onclick="runWizardTestVibration()" class="w-full py-3 rounded-2xl glass-button text-sky-300 font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all">
+          <span>🔔 בצע בדיקת התראה חיה כעת</span>
+        </button>
+      </div>
+
+      <!-- STEP 4: TARGET BEDTIME -->
+      <div id="wizard-step-4" class="space-y-4 hidden text-center">
+        <div class="w-16 h-16 rounded-2xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-3xl mx-auto">
+          ⏰
+        </div>
+        <h2 class="text-2xl font-black text-white">מתי אתה הולך לישון?</h2>
+        <p class="text-slate-300 text-xs">קבע את שעת היעד. אם לא תסמן שצחצחת עד שעה זו — תקבל תזכורת.</p>
+
+        <div class="pt-3 max-w-xs mx-auto">
+          <input type="time" id="wiz-input-time" value="23:00" class="w-full bg-white/10 border border-sky-500/40 rounded-2xl px-5 py-4 text-white font-mono text-3xl font-black text-center focus:outline-none focus:border-sky-400" />
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom Wizard Buttons -->
+    <div class="pt-4 flex gap-3">
+      <button id="wiz-btn-prev" onclick="wizardPrevStep()" class="py-3.5 px-5 rounded-2xl glass-button text-slate-300 font-bold text-xs hidden active:scale-95 transition-all">
+        חזור
+      </button>
+      <button id="wiz-btn-next" onclick="wizardNextStep()" class="flex-1 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 text-white font-extrabold text-sm shadow-lg shadow-sky-500/25 active:scale-95 transition-all">
+        הבא ▶
+      </button>
+    </div>
+
+  </div>
 
   <!-- MODAL: APK UPDATE REQUIRED -->
   <div id="apk-update-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-5">
@@ -473,9 +680,14 @@
     let streakCount = 0;
     let targetHour = 23;
     let targetMinute = 0;
+    let hasSmartWatch = true; // true = Watch Mode, false = Phone Only
+
+    // Onboarding Wizard State
+    let currentWizardStep = 1;
+    let wizardSelectedWatch = true;
 
     // Timer variables
-    let timerDuration = 120; // 2 minutes
+    let timerDuration = 120;
     let timerRemaining = 120;
     let timerInterval = null;
     let isTimerRunning = false;
@@ -500,7 +712,7 @@
     }
 
     // -------------------------------------------------------------------------
-    // INITIALIZATION & NATIVE STATE SYNC
+    // INITIALIZATION & ONBOARDING CHECK
     // -------------------------------------------------------------------------
     function initApp() {
       syncWithNative();
@@ -509,6 +721,18 @@
 
       document.getElementById('ota-web-version').innerText = window.__APP_VERSION__;
       document.getElementById('ota-last-sync').innerText = new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+
+      // Check if user completed setup
+      let setupDone = false;
+      if (window.ToothLockBridge && window.ToothLockBridge.isSetupCompleted) {
+        setupDone = window.ToothLockBridge.isSetupCompleted();
+      } else {
+        setupDone = localStorage.getItem('toothlock_setup_done') === 'true';
+      }
+
+      if (!setupDone) {
+        launchOnboardingWizard();
+      }
 
       // Check OTA in background like PriceRadar
       setTimeout(() => { checkLiveOtaUpdate(false); }, 1500);
@@ -522,6 +746,10 @@
           targetHour = window.ToothLockBridge.getTargetHour();
           targetMinute = window.ToothLockBridge.getTargetMinute();
           
+          if (window.ToothLockBridge.hasSmartWatch) {
+            hasSmartWatch = window.ToothLockBridge.hasSmartWatch();
+          }
+
           const nativeCode = window.ToothLockBridge.getNativeBuildCode();
           const nativeVer = window.ToothLockBridge.getNativeVersionName();
           document.getElementById('ota-native-version').innerText = `v${nativeVer} (Build ${nativeCode})`;
@@ -529,21 +757,240 @@
           console.error("Bridge sync error:", e);
         }
       } else {
-        // Fallback for browser preview
         isBrushed = localStorage.getItem('mock_brushed') === 'true';
         streakCount = Number(localStorage.getItem('mock_streak') || 0);
+        hasSmartWatch = localStorage.getItem('mock_has_watch') !== 'false';
       }
 
+      applyModeToUi();
       updateHomeUi();
       updateTargetTimeUi();
     }
 
-    // Called automatically by MainActivity.onResume()
     window.onNativeStateChanged = function() {
       syncWithNative();
       refreshDiagnostics();
     };
 
+    // -------------------------------------------------------------------------
+    // APP MODE ADAPTATION (WATCH MODE vs PHONE-ONLY MODE)
+    // -------------------------------------------------------------------------
+    function switchAppMode(toWatchMode) {
+      hasSmartWatch = toWatchMode;
+      if (window.ToothLockBridge && window.ToothLockBridge.setHasSmartWatch) {
+        window.ToothLockBridge.setHasSmartWatch(toWatchMode);
+      } else {
+        localStorage.setItem('mock_has_watch', String(toWatchMode));
+      }
+      applyModeToUi();
+      showToast(toWatchMode ? "הופעל מצב שעון חכם ⌚" : "הופעל מצב טלפון בלבד 📱");
+    }
+
+    function applyModeToUi() {
+      const modeBadge = document.getElementById('header-mode-badge');
+      const heroSubtitle = document.getElementById('hero-subtitle');
+
+      const chip1Icon = document.getElementById('chip-1-icon');
+      const chip1Title = document.getElementById('chip-1-title');
+      const chip1Status = document.getElementById('chip-watch-status');
+
+      const chip2Icon = document.getElementById('chip-2-icon');
+      const chip2Title = document.getElementById('chip-2-title');
+      const chip2Status = document.getElementById('chip-sleep-status');
+
+      const wearableGuideCard = document.getElementById('lab-wearable-guide-card');
+      const phoneOnlyBanner = document.getElementById('lab-phone-only-banner');
+      const labWatchTests = document.getElementById('lab-watch-tests');
+      const labPhoneTests = document.getElementById('lab-phone-tests');
+      const labCurrentMode = document.getElementById('lab-current-mode');
+
+      const btnModeWatch = document.getElementById('btn-mode-watch');
+      const btnModePhone = document.getElementById('btn-mode-phone');
+
+      if (hasSmartWatch) {
+        // WATCH MODE
+        modeBadge.innerText = "⌚ מצב שעון";
+        modeBadge.className = "text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 font-bold border border-sky-500/30";
+        heroSubtitle.innerText = isBrushed ? "כל הכבוד על השמירה על השיניים! השעון יישאר שקט הלילה." : "השעון ירעיד את היד שלך ברצף פולסים מורגש בשעת היעד.";
+
+        chip1Icon.innerText = "⌚";
+        chip1Title.innerText = "Galaxy Watch";
+        chip2Icon.innerText = "🌙";
+        chip2Title.innerText = "מצב שינה";
+
+        wearableGuideCard.classList.remove('hidden');
+        phoneOnlyBanner.classList.add('hidden');
+        labWatchTests.classList.remove('hidden');
+        labPhoneTests.classList.add('hidden');
+        labCurrentMode.innerText = "מצב שעון חכם ⌚";
+        labCurrentMode.className = "font-bold text-sky-400";
+
+        btnModeWatch.className = "p-3 rounded-2xl border text-xs font-bold transition-all text-center flex flex-col items-center gap-1.5 border-sky-500 bg-sky-500/20 text-sky-300";
+        btnModePhone.className = "p-3 rounded-2xl border text-xs font-bold transition-all text-center flex flex-col items-center gap-1.5 border-white/5 bg-white/5 text-slate-400";
+      } else {
+        // PHONE ONLY MODE
+        modeBadge.innerText = "📱 טלפון בלבד";
+        modeBadge.className = "text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/30";
+        heroSubtitle.innerText = isBrushed ? "כל הכבוד! צחצחת היום. הטלפון יישאר שקט הלילה." : "הטלפון יזכיר לך לצחצח עם רטט מורגש והתראה בולטת בשעת היעד.";
+
+        chip1Icon.innerText = "📱";
+        chip1Title.innerText = "מכשיר מוגדר";
+        chip1Status.innerText = "טלפון בלבד ✅";
+        chip1Status.className = "text-xs font-bold text-indigo-300 truncate";
+
+        chip2Icon.innerText = "⏰";
+        chip2Title.innerText = "שעת תזכורת";
+        chip2Status.innerText = `${String(targetHour).padStart(2,'0')}:${String(targetMinute).padStart(2,'0')}`;
+        chip2Status.className = "text-xs font-bold text-emerald-300";
+
+        wearableGuideCard.classList.add('hidden');
+        phoneOnlyBanner.classList.remove('hidden');
+        labWatchTests.classList.add('hidden');
+        labPhoneTests.classList.remove('hidden');
+        labCurrentMode.innerText = "מצב טלפון בלבד 📱";
+        labCurrentMode.className = "font-bold text-indigo-300";
+
+        btnModeWatch.className = "p-3 rounded-2xl border text-xs font-bold transition-all text-center flex flex-col items-center gap-1.5 border-white/5 bg-white/5 text-slate-400";
+        btnModePhone.className = "p-3 rounded-2xl border text-xs font-bold transition-all text-center flex flex-col items-center gap-1.5 border-indigo-500 bg-indigo-500/20 text-indigo-300";
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // ONBOARDING WIZARD LOGIC
+    // -------------------------------------------------------------------------
+    function launchOnboardingWizard() {
+      currentWizardStep = 1;
+      wizardSelectedWatch = hasSmartWatch;
+      document.getElementById('onboarding-wizard').classList.remove('hidden');
+      updateWizardStepUi();
+    }
+
+    function updateWizardStepUi() {
+      const stepIndicator = document.getElementById('wizard-step-indicator');
+      const progressBar = document.getElementById('wizard-progress-bar');
+      const btnPrev = document.getElementById('wiz-btn-prev');
+      const btnNext = document.getElementById('wiz-btn-next');
+
+      stepIndicator.innerText = `שלב ${currentWizardStep} מתוך 4`;
+      progressBar.style.width = `${(currentWizardStep / 4) * 100}%`;
+
+      btnPrev.classList.toggle('hidden', currentWizardStep === 1);
+      btnNext.innerText = (currentWizardStep === 4) ? "סיום והתחלת שימוש! ✨" : "הבא ▶";
+
+      for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById(`wizard-step-${i}`);
+        el.classList.toggle('hidden', i !== currentWizardStep);
+      }
+
+      if (currentWizardStep === 3) {
+        runWizardDiagnostics();
+      }
+    }
+
+    function wizardNextStep() {
+      if (currentWizardStep < 4) {
+        currentWizardStep++;
+        updateWizardStepUi();
+      } else {
+        finishOnboarding();
+      }
+    }
+
+    function wizardPrevStep() {
+      if (currentWizardStep > 1) {
+        currentWizardStep--;
+        updateWizardStepUi();
+      }
+    }
+
+    function selectWizardMode(isWatch) {
+      wizardSelectedWatch = isWatch;
+      const cardWatch = document.getElementById('card-choice-watch');
+      const cardPhone = document.getElementById('card-choice-phone');
+
+      if (isWatch) {
+        cardWatch.className = "p-4 rounded-3xl border-2 border-sky-500 bg-sky-500/15 cursor-pointer transition-all flex items-start gap-4";
+        cardPhone.className = "p-4 rounded-3xl border-2 border-white/10 bg-white/5 cursor-pointer transition-all flex items-start gap-4";
+      } else {
+        cardWatch.className = "p-4 rounded-3xl border-2 border-white/10 bg-white/5 cursor-pointer transition-all flex items-start gap-4";
+        cardPhone.className = "p-4 rounded-3xl border-2 border-indigo-500 bg-indigo-500/15 cursor-pointer transition-all flex items-start gap-4";
+      }
+    }
+
+    function runWizardDiagnostics() {
+      const sub = document.getElementById('wizard-step-3-subtitle');
+      const rowBt = document.getElementById('wiz-row-bluetooth');
+      const rowWatch = document.getElementById('wiz-row-watch');
+      const guideBox = document.getElementById('wiz-wearable-guide-box');
+      const testBtn = document.getElementById('wiz-btn-test');
+
+      if (wizardSelectedWatch) {
+        sub.innerText = "בודק קישוריות לשעון סמסונג וחיישני שינה...";
+        rowBt.classList.remove('hidden');
+        rowWatch.classList.remove('hidden');
+        guideBox.classList.remove('hidden');
+        testBtn.innerText = "⌚ שלח רטט בדיקה לשעון כעת";
+
+        let watchConnected = false;
+        let watchName = "Galaxy Watch";
+        if (window.ToothLockBridge) {
+          try {
+            watchConnected = window.ToothLockBridge.isGalaxyWatchConnected();
+            watchName = window.ToothLockBridge.getWatchName();
+          } catch (e) {}
+        }
+        document.getElementById('wiz-check-watch').innerText = watchConnected ? `✓ מחובר (${watchName})` : "⚠️ לא זוהה בלוטות' כרגע";
+        document.getElementById('wiz-check-watch').className = watchConnected ? "font-bold text-emerald-400" : "font-bold text-amber-400";
+      } else {
+        sub.innerText = "הגדרת מערכת התראות ישירות בטלפון...";
+        rowBt.classList.add('hidden');
+        rowWatch.classList.add('hidden');
+        guideBox.classList.add('hidden');
+        testBtn.innerText = "📱 שלח התראה ובדיקת רטט לטלפון כעת";
+      }
+    }
+
+    function runWizardTestVibration() {
+      if (wizardSelectedWatch) {
+        testWatchAlertDirect();
+      } else {
+        testPhoneAlertDirect();
+      }
+    }
+
+    function finishOnboarding() {
+      const timeVal = document.getElementById('wiz-input-time').value;
+      if (timeVal) {
+        const [h, m] = timeVal.split(':').map(Number);
+        targetHour = h;
+        targetMinute = m;
+        if (window.ToothLockBridge) window.ToothLockBridge.setTargetTime(h, m);
+      }
+
+      switchAppMode(wizardSelectedWatch);
+
+      if (window.ToothLockBridge && window.ToothLockBridge.setSetupCompleted) {
+        window.ToothLockBridge.setSetupCompleted(true);
+      } else {
+        localStorage.setItem('toothlock_setup_done', 'true');
+      }
+
+      document.getElementById('onboarding-wizard').classList.add('hidden');
+      showToast("🎉 ההגדרה הושלמה בהצלחה! ToothLock מוכן לשמור על השיניים שלך.");
+    }
+
+    function skipOnboarding() {
+      document.getElementById('onboarding-wizard').classList.add('hidden');
+      if (window.ToothLockBridge && window.ToothLockBridge.setSetupCompleted) {
+        window.ToothLockBridge.setSetupCompleted(true);
+      } else {
+        localStorage.setItem('toothlock_setup_done', 'true');
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // HOME TAB ACTIONS
+    // -------------------------------------------------------------------------
     function updateHomeUi() {
       const heroCard = document.getElementById('hero-card');
       const heroIcon = document.getElementById('hero-icon');
@@ -564,7 +1011,7 @@
         heroTitle.innerText = "צחצחת היום! נקי ומצוחצח ✨";
         heroTitle.classList.remove('text-red-400');
         heroTitle.classList.add('text-emerald-400');
-        heroSubtitle.innerText = "כל הכבוד על השמירה על השיניים! השעון יישאר שקט הלילה.";
+        heroSubtitle.innerText = hasSmartWatch ? "כל הכבוד על השמירה על השיניים! השעון יישאר שקט הלילה." : "כל הכבוד! צחצחת היום. הטלפון יישאר שקט הלילה.";
 
         btnToggle.innerHTML = "<span>בטל סימון (טרם צחצחתי)</span>";
         btnToggle.className = "w-full mt-6 py-4 px-6 rounded-2xl font-black text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-lg bg-gradient-to-r from-red-600 to-rose-700 text-white shadow-red-600/25";
@@ -577,7 +1024,7 @@
         heroTitle.innerText = "טרם צחצחת שיניים היום!";
         heroTitle.classList.remove('text-emerald-400');
         heroTitle.classList.add('text-red-400');
-        heroSubtitle.innerText = "השעון ירעיד את היד שלך ברצף פולסים מורגש בשעת היעד.";
+        heroSubtitle.innerText = hasSmartWatch ? "השעון ירעיד את היד שלך ברצף פולסים מורגש בשעת היעד." : "הטלפון יזכיר לך לצחצח עם רטט מורגש והתראה בולטת בשעת היעד.";
 
         btnToggle.innerHTML = "<span>סמן כ'צחצחתי' 🪥✨</span>";
         btnToggle.className = "w-full mt-6 py-4 px-6 rounded-2xl font-black text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-lg bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-emerald-500/25";
@@ -585,7 +1032,6 @@
     }
 
     function toggleBrushedStatus() {
-      triggerHaptic("heavy");
       isBrushed = !isBrushed;
       if (isBrushed) streakCount++; else streakCount = Math.max(0, streakCount - 1);
 
@@ -605,7 +1051,7 @@
       const container = document.getElementById('week-history-row');
       container.innerHTML = '';
       const days = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
-      const todayIndex = new Date().getDay(); // 0 is Sunday
+      const todayIndex = new Date().getDay();
 
       days.forEach((day, idx) => {
         const isToday = idx === todayIndex;
@@ -645,6 +1091,7 @@
       if (window.ToothLockBridge) {
         window.ToothLockBridge.setTargetTime(h, m);
       }
+      applyModeToUi();
       showToast(`שעת היעד עודכנה ל-${val} בהצלחה! ⏰`);
     }
 
@@ -660,7 +1107,6 @@
     // TAB NAVIGATION
     // -------------------------------------------------------------------------
     function switchTab(tabId) {
-      triggerHaptic("light");
       ['home', 'timer', 'lab', 'settings'].forEach(t => {
         const sec = document.getElementById(`tab-${t}`);
         const btn = document.getElementById(`nav-btn-${t}`);
@@ -685,12 +1131,7 @@
     // 2-MINUTE SMART TIMER ENGINE
     // -------------------------------------------------------------------------
     function toggleTimer() {
-      triggerHaptic("light");
-      if (isTimerRunning) {
-        pauseTimer();
-      } else {
-        startTimer();
-      }
+      if (isTimerRunning) pauseTimer(); else startTimer();
     }
 
     function startTimer() {
@@ -703,10 +1144,8 @@
           timerRemaining--;
           updateTimerDisplay();
 
-          // Beep at 30s quadrant shifts (90s, 60s, 30s left)
           if (timerRemaining === 90 || timerRemaining === 60 || timerRemaining === 30) {
             playAudioBeep(880, 0.3);
-            triggerHaptic("heavy");
           }
         } else {
           finishTimer();
@@ -733,12 +1172,10 @@
       document.getElementById('timer-digits').innerText = 
         `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-      // Progress ring
-      const circumference = 263.89; // 2 * PI * 42
+      const circumference = 263.89;
       const offset = circumference - (timerRemaining / timerDuration) * circumference;
       document.getElementById('timer-progress-ring').style.strokeDashoffset = offset;
 
-      // Active Quadrant (1 to 4)
       const elapsed = timerDuration - timerRemaining;
       let quad = 1;
       let quadName = "1. עליון ימני";
@@ -763,7 +1200,6 @@
       playAudioBeep(1000, 0.4);
       setTimeout(() => playAudioBeep(1200, 0.5), 450);
 
-      // Auto mark brushed
       if (!isBrushed) {
         toggleBrushedStatus();
       }
@@ -786,11 +1222,13 @@
         } catch (e) {}
       }
 
-      document.getElementById('chip-watch-status').innerText = watchConnected ? "מחובר וענוד" : "לא מחובר";
-      document.getElementById('chip-watch-status').className = watchConnected ? "text-xs font-bold text-emerald-400 truncate" : "text-xs font-bold text-slate-400 truncate";
+      if (hasSmartWatch) {
+        document.getElementById('chip-watch-status').innerText = watchConnected ? "מחובר וענוד" : "לא מחובר";
+        document.getElementById('chip-watch-status').className = watchConnected ? "text-xs font-bold text-emerald-400 truncate" : "text-xs font-bold text-slate-400 truncate";
 
-      document.getElementById('chip-sleep-status').innerText = sleepActive ? "פעיל (שינה)" : "ער / כבוי";
-      document.getElementById('chip-sleep-status').className = sleepActive ? "text-xs font-bold text-purple-400" : "text-xs font-bold text-slate-400";
+        document.getElementById('chip-sleep-status').innerText = sleepActive ? "פעיל (שינה)" : "ער / כבוי";
+        document.getElementById('chip-sleep-status').className = sleepActive ? "text-xs font-bold text-purple-400" : "text-xs font-bold text-slate-400";
+      }
 
       document.getElementById('lab-watch-name').innerText = watchName;
       document.getElementById('lab-watch-conn').innerText = watchConnected ? "🟢 מחובר" : "⚪ מנותק";
@@ -806,7 +1244,6 @@
     }
 
     function testWatchAlertDirect() {
-      // NOTE: Zero vibration on phone! Phone remains 100% still and silent.
       if (window.ToothLockBridge) {
         window.ToothLockBridge.sendWatchAlert(1);
         showToast("⌚ נשלח רטט לשעון בלבד! הטלפון דומם ושקט ב-100%.");
@@ -816,15 +1253,20 @@
     }
 
     function testWatchAlertDelayed() {
-      // NOTE: Zero vibration on phone!
       showToast("🔒 כבה/נעל את מסך הטלפון כעת! השעון ירטוט ב-4 פולסים בעוד 3 שניות...");
       if (window.ToothLockBridge) {
         window.ToothLockBridge.sendDelayedWatchAlert(3);
       }
     }
 
+    function testPhoneAlertDirect() {
+      if (window.ToothLockBridge) {
+        window.ToothLockBridge.sendWatchAlert(1);
+        showToast("📱 נשלחה תזכורת עם צליל ורטט מורגש בטלפון!");
+      }
+    }
+
     function testPhoneAlarm() {
-      triggerHaptic("heavy");
       if (window.ToothLockBridge) {
         window.ToothLockBridge.sendEmergencyPhoneAlarm();
         showToast("🚨 אזעקת חירום בטלפון הופעלה (שלב 4)!");
@@ -838,17 +1280,17 @@
       const bar = document.getElementById('sim-progress-bar');
 
       container.classList.remove('hidden');
-      text.innerText = "שלב 1 מתוך 4: תזכורת 1 רוטטת בשעון ⌚...";
+      text.innerText = hasSmartWatch ? "שלב 1 מתוך 4: תזכורת 1 רוטטת בשעון ⌚..." : "שלב 1 מתוך 4: תזכורת 1 בטלפון 📱...";
       bar.style.width = "25%";
-      testWatchAlertDirect();
+      if (hasSmartWatch) testWatchAlertDirect(); else testPhoneAlertDirect();
 
       simTimer = setTimeout(() => {
-        text.innerText = "שלב 2 מתוך 4: תזכורת 2 רוטטת בשעון ⚠️...";
+        text.innerText = hasSmartWatch ? "שלב 2 מתוך 4: תזכורת 2 רוטטת בשעון ⚠️..." : "שלב 2 מתוך 4: תזכורת 2 בטלפון ⚠️...";
         bar.style.width = "50%";
         if (window.ToothLockBridge) window.ToothLockBridge.sendWatchAlert(2);
 
         simTimer = setTimeout(() => {
-          text.innerText = "שלב 3 מתוך 4: תזכורת 3 אחרונה בשעון 🚨...";
+          text.innerText = hasSmartWatch ? "שלב 3 מתוך 4: תזכורת 3 אחרונה בשעון 🚨..." : "שלב 3 מתוך 4: תזכורת 3 אחרונה בטלפון 🚨...";
           bar.style.width = "75%";
           if (window.ToothLockBridge) window.ToothLockBridge.sendWatchAlert(3);
 
@@ -892,20 +1334,16 @@
         const currentTs = Number(localStorage.getItem('toothlock_live_ota_ts') || window.__BUILD_TIMESTAMP__);
         const installedNativeBuild = (window.ToothLockBridge && window.ToothLockBridge.getNativeBuildCode) 
           ? window.ToothLockBridge.getNativeBuildCode() 
-          : 130;
+          : 134;
 
         document.getElementById('ota-last-sync').innerText = new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
 
-        // 1. Check if a native APK update is strictly required
         if (remoteMinNative > installedNativeBuild) {
-          console.log(`[ToothLock OTA] Native APK required: min=${remoteMinNative} > installed=${installedNativeBuild}`);
           showApkUpdateModal(remoteVer, remoteNotes);
           return;
         }
 
-        // 2. Pure Web OTA Update (Hot-reload, ZERO APK download!)
         if (remoteTs > currentTs) {
-          console.log(`[ToothLock OTA] Hot-applying live update: ${remoteVer} (ts: ${remoteTs})`);
           localStorage.setItem('toothlock_live_ota_html', remoteHtml);
           localStorage.setItem('toothlock_live_ota_ts', String(remoteTs));
           localStorage.setItem('toothlock_live_ota_ver', remoteVer);
@@ -947,17 +1385,6 @@
       checkApkUpdateManual();
     }
 
-    // -------------------------------------------------------------------------
-    // UTILS: HAPTIC & TOAST
-    // -------------------------------------------------------------------------
-    function triggerHaptic(type = "light") {
-      if (window.ToothLockBridge) {
-        try { window.ToothLockBridge.triggerHaptic(type); } catch (e) {}
-      } else if (navigator.vibrate) {
-        navigator.vibrate(type === "heavy" ? 40 : 15);
-      }
-    }
-
     let toastTimer = null;
     function showToast(msg) {
       const t = document.getElementById('toast');
@@ -969,7 +1396,6 @@
       }, 3000);
     }
 
-    // Run on startup
     window.addEventListener('DOMContentLoaded', initApp);
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {

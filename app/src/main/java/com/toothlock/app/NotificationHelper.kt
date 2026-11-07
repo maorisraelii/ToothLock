@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
 object NotificationHelper {
 
     const val CHANNEL_WATCH = "tooth_watch_silent_phone_v8"
+    const val CHANNEL_PHONE_ONLY = "tooth_phone_only_v1"
     const val CHANNEL_EMERGENCY = "tooth_emergency_phone_v4"
     const val NOTIFICATION_ID = 1001
 
@@ -45,14 +46,14 @@ object NotificationHelper {
                 try { notificationManager.deleteNotificationChannel(it) } catch (_: Exception) {}
             }
 
-            // 1. Watch-Focused Channel: Configured with standard alert sound for Galaxy Wearable bridge,
-            // BUT WITH VIBRATION STRICTLY DISABLED ON THE PHONE! The phone will NEVER shake or vibrate!
             val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
             val audioAttributes = AudioAttributes.Builder()
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .setUsage(AudioAttributes.USAGE_NOTIFICATION)
                 .build()
 
+            // 1. Watch-Focused Channel: Configured with standard alert sound for Galaxy Wearable bridge,
+            // BUT WITH VIBRATION STRICTLY DISABLED ON THE PHONE! The phone will NEVER shake or vibrate!
             val watchChannel = NotificationChannel(
                 CHANNEL_WATCH,
                 "תזכורת צחצוח לשעון (ללא רטט בטלפון - שעון בלבד)",
@@ -66,6 +67,21 @@ object NotificationHelper {
                 lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             }
             notificationManager.createNotificationChannel(watchChannel)
+
+            // 2. Phone-Only Channel: For users without a smartwatch - alerts with clear phone sound & vibration
+            val phoneOnlyChannel = NotificationChannel(
+                CHANNEL_PHONE_ONLY,
+                "תזכורת צחצוח בטלפון (למשתמשים ללא שעון חכם)",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "התראה עם צליל ורטט מורגש בטלפון למשתמשים ללא שעון חכם"
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 800, 300, 800, 300, 1000)
+                setSound(defaultSoundUri, audioAttributes)
+                setBypassDnd(true)
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            }
+            notificationManager.createNotificationChannel(phoneOnlyChannel)
 
             // 2. Emergency Escalation Channel for Phone (After 3 missed watch alerts)
             val emergencyChannel = NotificationChannel(
@@ -102,13 +118,19 @@ object NotificationHelper {
         val brushedPendingIntent = createBrushedPendingIntent(context)
         val snoozePendingIntent = createSnoozePendingIntent(context)
 
+        val prefs = ToothPreferences(context)
+        val hasWatch = prefs.hasSmartWatch
+        val targetChannel = if (hasWatch) CHANNEL_WATCH else CHANNEL_PHONE_ONLY
+
         val title = when (alertIndex) {
-            1 -> "🪥 תזכורת 1 מתוך 3: זמן לצחצח שיניים!"
-            2 -> "⚠️ תזכורת 2 מתוך 3: אל תירדם! צחצח עכשיו."
-            else -> "🚨 תזכורת 3 אחרונה לשעון! (בקרוב אזעקה בטלפון)"
+            1 -> if (hasWatch) "🪥 תזכורת 1 מתוך 3: זמן לצחצח שיניים!" else "🪥 תזכורת 1: זמן לצחצח שיניים בטלפון!"
+            2 -> if (hasWatch) "⚠️ תזכורת 2 מתוך 3: אל תירדם! צחצח עכשיו." else "⚠️ תזכורת 2: אל תירדם! קום לצחצח."
+            else -> if (hasWatch) "🚨 תזכורת 3 אחרונה לשעון! (בקרוב אזעקה בטלפון)" else "🚨 תזכורת 3 אחרונה בטלפון!"
         }
 
-        val body = if (isSleeping) {
+        val body = if (!hasWatch) {
+            "תזכורת צחצוח שיניים בטלפון! לחץ 'צחצחתי' כדי לאשר."
+        } else if (isSleeping) {
             "השעון זיהה שנרדמת! רטט מתמשך על היד - קום לצחצח."
         } else {
             "רטט ממושך על פרק כף היד. לחץ 'צחצחתי' כדי לבטל."
@@ -133,7 +155,7 @@ object NotificationHelper {
 
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
-        val builder = NotificationCompat.Builder(context, CHANNEL_WATCH)
+        val builder = NotificationCompat.Builder(context, targetChannel)
             .setSmallIcon(R.drawable.ic_toothbrush)
             .setContentTitle(title)
             .setContentText(body)
@@ -142,15 +164,18 @@ object NotificationHelper {
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setContentIntent(openAppPendingIntent)
             .setAutoCancel(true)
-            .setLocalOnly(false)
+            .setLocalOnly(!hasWatch)
             .setSound(defaultSoundUri)
-            .setDefaults(0)
-            .setVibrate(longArrayOf(0))
-            .setOnlyAlertOnce(false)
+            .setDefaults(if (hasWatch) 0 else NotificationCompat.DEFAULT_VIBRATE)
+            .setVibrate(if (hasWatch) longArrayOf(0) else longArrayOf(0, 800, 300, 800, 300, 1000))
+            .setOnlyAlertOnce(!hasWatch)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .addAction(R.drawable.ic_check, "צחצחתי! 🪥", brushedPendingIntent)
             .addAction(R.drawable.ic_toothbrush, "נודניק 7 דק'", snoozePendingIntent)
-            .extend(wearableExtender)
+
+        if (hasWatch) {
+            builder.extend(wearableExtender)
+        }
 
         val notificationManager = NotificationManagerCompat.from(context)
 
@@ -158,6 +183,11 @@ object NotificationHelper {
         try {
             notificationManager.notify(NOTIFICATION_ID, builder.build())
         } catch (_: Exception) {}
+
+        if (!hasWatch) {
+            // For phone-only mode, single rich alerting notification is sufficient
+            return
+        }
 
         // Multi-pulse loop for watch:
         // 1. Re-triggers Samsung's bridge every 3 seconds so the GALAXY WATCH buzzes repeatedly on the wrist!

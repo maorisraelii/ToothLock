@@ -214,6 +214,29 @@ class MainActivity : AppCompatActivity() {
     class ToothLockBridge(private val activity: MainActivity) {
 
         @JavascriptInterface
+        fun isSetupCompleted(): Boolean {
+            return activity.prefs.isSetupCompleted
+        }
+
+        @JavascriptInterface
+        fun setSetupCompleted(completed: Boolean) {
+            activity.prefs.isSetupCompleted = completed
+        }
+
+        @JavascriptInterface
+        fun hasSmartWatch(): Boolean {
+            return activity.prefs.hasSmartWatch
+        }
+
+        @JavascriptInterface
+        fun setHasSmartWatch(hasWatch: Boolean) {
+            activity.runOnUiThread {
+                activity.prefs.hasSmartWatch = hasWatch
+                activity.notifyWebStateChanged()
+            }
+        }
+
+        @JavascriptInterface
         fun isBrushedToday(): Boolean {
             return activity.prefs.isBrushedToday()
         }
