@@ -20,13 +20,20 @@ class ToothPreferences(context: Context) {
         private const val KEY_LAST_STREAK_DATE = "last_streak_date"
         private const val PREFIX_BRUSHED = "brushed_"
 
+        /**
+         * Shift the day backwards by 4 hours so the status resets at 04:00 AM instead of 00:00.
+         * From 04:00 AM until 03:59 AM the next morning is considered the SAME brushing day.
+         */
         fun getTodayKey(): String {
+            val cal = Calendar.getInstance()
+            cal.add(Calendar.HOUR_OF_DAY, -4)
             val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-            return sdf.format(Date())
+            return sdf.format(cal.time)
         }
 
         fun getYesterdayKey(): String {
             val cal = Calendar.getInstance()
+            cal.add(Calendar.HOUR_OF_DAY, -4)
             cal.add(Calendar.DAY_OF_YEAR, -1)
             val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
             return sdf.format(cal.time)

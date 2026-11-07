@@ -1,11 +1,13 @@
 package com.toothlock.app
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
+import android.media.AudioManager
 import android.media.RingtoneManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
@@ -13,19 +15,28 @@ import androidx.core.app.NotificationManagerCompat
 
 object NotificationHelper {
 
-    const val CHANNEL_ID = "tooth_urgent_alerts"
+    const val CHANNEL_ID = "tooth_alarm_v3"
     const val NOTIFICATION_ID = 1001
 
     fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "התראות צחצוח שיניים (חירום)"
-            val descriptionText = "התראות רוטטות לשעון ולטלפון לפני השינה"
+            val notificationManager =
+                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+            // Remove legacy channels to ensure fresh alarm settings take effect
+            try {
+                notificationManager.deleteNotificationChannel("tooth_urgent_alerts")
+            } catch (_: Exception) {}
+
+            val name = "שעון מעורר צחצוח שיניים (חירום)"
+            val descriptionText = "התראות אזעקה רוטטות חזק לשעון סמסונג ולטלפון"
             val importance = NotificationManager.IMPORTANCE_HIGH
 
             val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
                 description = descriptionText
                 enableVibration(true)
-                vibrationPattern = longArrayOf(0, 600, 200, 600, 200, 1000, 300, 1000)
+                // Aggressive multi-pulse vibration pattern
+                vibrationPattern = longArrayOf(0, 1000, 300, 1000, 300, 1500, 400, 1500)
 
                 val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
                     ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
@@ -37,10 +48,9 @@ object NotificationHelper {
 
                 setSound(alarmSound, audioAttributes)
                 setBypassDnd(true)
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             }
 
-            val notificationManager =
-                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
     }
@@ -86,19 +96,23 @@ object NotificationHelper {
         )
 
         val title = if (isSleeping) {
-            "🚨 התעורר לרגע! לא צחצחת שיניים!"
+            "🚨 התעורר לצחצח שיניים!"
         } else {
             "🪥 זמן לצחצח שיניים לפני השינה!"
         }
 
         val body = when {
-            isSleeping -> "השעון זיהה שנרדמת בלי לצחצח. קום עכשיו ל-2 דקות כדי שלא תתעורר ב-3 בלילה!"
+            isSleeping -> "השעון זיהה שנרדמת בלי לצחצח! קום עכשיו ל-2 דקות כדי שלא תתעורר ב-3 בלילה."
             isWatchConnected -> "השעון רוטט כדי להזכיר לך לצחצח עכשיו לפני שתרדם."
             else -> "טרם סימנת שצחצחת שיניים היום. אל תירדם ככה!"
         }
 
-        // Wearable specific actions for Samsung Galaxy Watch
+        val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+
+        // Wearable specific actions for Samsung Galaxy Watch (keeps screen awake & shows actions)
         val wearableExtender = NotificationCompat.WearableExtender()
+            .setHintScreenTimeout(NotificationCompat.WearableExtender.SCREEN_TIMEOUT_LONG)
             .addAction(
                 NotificationCompat.Action.Builder(
                     R.drawable.ic_check,
@@ -123,15 +137,24 @@ object NotificationHelper {
             // CATEGORY_ALARM forces the notification through Samsung Sleep/Bedtime DND mode!
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setContentIntent(openAppPendingIntent)
+            // FullScreenIntent elevates to incoming call/alarm behavior on Wear OS & Phone!
+            .setFullScreenIntent(openAppPendingIntent, true)
             .setAutoCancel(true)
-            .setVibrate(longArrayOf(0, 600, 200, 600, 200, 1000, 300, 1000))
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setSound(alarmSound, AudioManager.STREAM_ALARM)
+            .setVibrate(longArrayOf(0, 1000, 300, 1000, 300, 1500, 400, 1500))
             .addAction(R.drawable.ic_check, "צחצחתי! 🪥", brushedPendingIntent)
             .addAction(R.drawable.ic_toothbrush, "נודניק 10 דק'", snoozePendingIntent)
             .extend(wearableExtender)
 
+        val notification = notificationBuilder.build().apply {
+            // FLAG_INSISTENT causes sound and vibration to repeat like an alarm until interacted with
+            flags = flags or Notification.FLAG_INSISTENT
+        }
+
         try {
             val notificationManager = NotificationManagerCompat.from(context)
-            notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build())
+            notificationManager.notify(NOTIFICATION_ID, notification)
         } catch (_: SecurityException) {
             // Android 13+ permission check handled in MainActivity
         }

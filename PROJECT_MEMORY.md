@@ -10,9 +10,9 @@
 - **Purpose:** Prevents falling asleep without brushing teeth by monitoring night routine, detecting sleep via Samsung Galaxy Watch (Wear OS), and triggering aggressive vibrating alarms that bypass Sleep Mode.
 - **Platform:** Native Android (Kotlin, minSdk 26, targetSdk 34) + Wear OS integration.
 - **Components:**
-  1. **Home Screen App Widget (`ToothWidgetProvider`):** 1-tap toggle (Red: "לא צחצחתי", Green: "צחצחתי! ✨"), streak tracking.
+  1. **Home Screen App Widget (`ToothWidgetProvider`):** 1-tap toggle (Red: "לא צחצחתי", Green: "צחצחתי! ✨"), streak tracking. Status resets daily at 04:00 AM (not midnight) to accommodate night routines.
   2. **Watch & Sleep Detector (`WatchAndSleepDetector`):** Checks Google Wearable Node API & Bluetooth for Galaxy Watch, and detects Samsung Sleep Mode (Bedtime Mode / ZenMode / DND).
-  3. **Urgent Notification Helper (`NotificationHelper`):** High priority notification channel (`IMPORTANCE_HIGH`) using `NotificationCompat.CATEGORY_ALARM`, bypassing DND to buzz the user's wrist.
+  3. **Urgent Notification Helper (`NotificationHelper`):** High priority notification channel `tooth_alarm_v3` using `NotificationCompat.CATEGORY_ALARM`, `setFullScreenIntent(true)`, and `Notification.FLAG_INSISTENT` so the Galaxy Watch vibrates vigorously with its full alarm strength until interacted with.
   4. **Direct Watch Actions (`NotificationActionReceiver`):** Interactive notification actions on the watch ("צחצחתי עכשיו!", "נודניק 10 דק'").
   5. **Background Scheduler (`ToothCheckWorker` + `BootReceiver`):** WorkManager daily periodic check at bedtime (default 23:00) persisting across phone reboots.
 
