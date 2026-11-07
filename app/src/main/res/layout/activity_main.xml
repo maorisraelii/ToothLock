@@ -398,6 +398,53 @@
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
+                <!-- Samsung Galaxy Wearable Configuration Guide -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    app:cardBackgroundColor="#2A1B00"
+                    app:cardCornerRadius="16dp"
+                    app:strokeColor="#FFB300"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="⚠️ חובה בסמסונג: אישור התראות לשעון"
+                            android:textColor="#FFD54F"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="במכשירי סמסונג, אפליקציית Galaxy Wearable מכבה התראות של אפליקציות חדשות כברירת מחדל!\n\nכדי שהשעון ירטוט:\n1. לחץ על הכפתור למטה לפתיחת Galaxy Wearable\n2. היכנס ל: הגדרות שעון ◄ התראות ◄ התראות יישומים\n3. הפעל את המתג של ToothLock\n4. הפעל את 'השתק טלפון מחובר' (כדי שהטלפון יהיה שקט ורק השעון ירטוט)"
+                            android:textColor="#FFF8E1"
+                            android:textSize="12sp"
+                            android:lineSpacingExtra="3dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_open_galaxy_wearable_banner"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:layout_marginTop="10dp"
+                            android:backgroundTint="#FFB300"
+                            android:text="🚀 פתח את Galaxy Wearable עכשיו"
+                            android:textColor="#000000"
+                            android:textStyle="bold"
+                            app:cornerRadius="12dp" />
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
                 <!-- Diagnostic 2: Watch Only Multi-Pulse Vibration -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
