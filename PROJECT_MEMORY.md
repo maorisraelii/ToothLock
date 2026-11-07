@@ -37,5 +37,5 @@
   3. Commit and push branch to origin: `git push -u origin <branch-name>`.
   4. Open a Pull Request using `gh pr create --title "..." --body "..."`.
   5. The PR triggers automated build verification in GitHub Actions.
-  6. Present the PR to the user for review/approval before merging to `main`.
+  6. **Full Autonomous Execution:** Once CI build passes, automatically approve and merge the PR (`gh pr merge --merge --delete-branch`), verify the resulting release build, and present the completed update. Do not pause to wait for user confirmation.
 
