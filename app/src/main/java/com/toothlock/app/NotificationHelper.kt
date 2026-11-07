@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 
 object NotificationHelper {
 
-    const val CHANNEL_WATCH = "tooth_watch_silent_phone_v5"
+    const val CHANNEL_WATCH = "tooth_watch_vibration_v6"
     const val CHANNEL_EMERGENCY = "tooth_emergency_phone_v4"
     const val NOTIFICATION_ID = 1001
 
@@ -34,19 +34,19 @@ object NotificationHelper {
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
             // Clean up old channels
-            listOf("tooth_urgent_alerts", "tooth_alarm_v3", "tooth_watch_channel_v4").forEach {
+            listOf("tooth_urgent_alerts", "tooth_alarm_v3", "tooth_watch_channel_v4", "tooth_watch_silent_phone_v5").forEach {
                 try { notificationManager.deleteNotificationChannel(it) } catch (_: Exception) {}
             }
 
-            // 1. Watch-Focused Channel: STRICTLY SILENT ON PHONE, zero vibration on phone!
+            // 1. Watch-Focused Channel: Enables vibration for Wear OS / Galaxy Watch bridge with silent sound
             val watchChannel = NotificationChannel(
                 CHANNEL_WATCH,
-                "תזכורת צחצוח לשעון סמסונג (שקט מוחלט בטלפון)",
+                "תזכורת צחצוח לשעון סמסונג (רטט בשעון)",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "רטט מרובה לשעון סמסונג - הטלפון שקט וללא שום רטט"
-                enableVibration(false)
-                vibrationPattern = null
+                description = "רטט מורגש בשעון סמסונג ללא צליל התראה רועש"
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 1000, 400, 1000, 400, 1200)
                 setSound(null, null)
                 setBypassDnd(true)
                 lockscreenVisibility = Notification.VISIBILITY_PUBLIC
@@ -123,12 +123,12 @@ object NotificationHelper {
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setPriority(NotificationCompat.PRIORITY_MAX)
-            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setContentIntent(openAppPendingIntent)
             .setAutoCancel(true)
             .setLocalOnly(false)
             .setSound(null)
-            .setVibrate(null)
+            .setVibrate(longArrayOf(0, 1000, 400, 1000, 400, 1200))
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .addAction(R.drawable.ic_check, "צחצחתי! 🪥", brushedPendingIntent)
             .addAction(R.drawable.ic_toothbrush, "נודניק 7 דק'", snoozePendingIntent)

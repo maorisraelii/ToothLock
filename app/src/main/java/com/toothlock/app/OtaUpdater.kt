@@ -52,12 +52,26 @@ object OtaUpdater {
 
                 val assets = json.getJSONArray("assets")
                 var downloadUrl = ""
+
+                // 1. Specifically match the Phone APK: ToothLock.apk
                 for (i in 0 until assets.length()) {
                     val asset = assets.getJSONObject(i)
                     val assetName = asset.getString("name")
-                    if (assetName.endsWith(".apk", ignoreCase = true)) {
+                    if (assetName.equals("ToothLock.apk", ignoreCase = true)) {
                         downloadUrl = asset.getString("browser_download_url")
                         break
+                    }
+                }
+
+                // 2. Fallback: match any APK that is NOT the Watch APK
+                if (downloadUrl.isEmpty()) {
+                    for (i in 0 until assets.length()) {
+                        val asset = assets.getJSONObject(i)
+                        val assetName = asset.getString("name")
+                        if (assetName.endsWith(".apk", ignoreCase = true) && !assetName.contains("watch", ignoreCase = true)) {
+                            downloadUrl = asset.getString("browser_download_url")
+                            break
+                        }
                     }
                 }
 
