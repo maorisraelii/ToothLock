@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 
 object NotificationHelper {
 
-    const val CHANNEL_WATCH = "tooth_watch_alert_v7"
+    const val CHANNEL_WATCH = "tooth_watch_silent_phone_v8"
     const val CHANNEL_EMERGENCY = "tooth_emergency_phone_v4"
     const val NOTIFICATION_ID = 1001
 
@@ -39,12 +39,14 @@ object NotificationHelper {
                 "tooth_alarm_v3",
                 "tooth_watch_channel_v4",
                 "tooth_watch_silent_phone_v5",
-                "tooth_watch_vibration_v6"
+                "tooth_watch_vibration_v6",
+                "tooth_watch_alert_v7"
             ).forEach {
                 try { notificationManager.deleteNotificationChannel(it) } catch (_: Exception) {}
             }
 
-            // 1. Watch-Focused Channel: Configured with standard alert attributes so Samsung mirrors to Galaxy Watch
+            // 1. Watch-Focused Channel: Configured with standard alert sound for Galaxy Wearable bridge,
+            // BUT WITH VIBRATION STRICTLY DISABLED ON THE PHONE! The phone will NEVER shake or vibrate!
             val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
             val audioAttributes = AudioAttributes.Builder()
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -53,12 +55,12 @@ object NotificationHelper {
 
             val watchChannel = NotificationChannel(
                 CHANNEL_WATCH,
-                "תזכורת צחצוח לשעון סמסונג (התראה לשעון)",
+                "תזכורת צחצוח לשעון (ללא רטט בטלפון - שעון בלבד)",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "תזכורת צחצוח המועברת לשעון סמסונג עם רטט מורגש"
-                enableVibration(true)
-                vibrationPattern = longArrayOf(0, 1000, 400, 1000, 400, 1200)
+                description = "תזכורת המועברת לשעון סמסונג כשהטלפון 100% שקט ואינו רוטט"
+                enableVibration(false)
+                vibrationPattern = longArrayOf(0)
                 setSound(defaultSoundUri, audioAttributes)
                 setBypassDnd(true)
                 lockscreenVisibility = Notification.VISIBILITY_PUBLIC
@@ -142,8 +144,9 @@ object NotificationHelper {
             .setAutoCancel(true)
             .setLocalOnly(false)
             .setSound(defaultSoundUri)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
-            .setVibrate(longArrayOf(0, 1000, 400, 1000, 400, 1200))
+            .setDefaults(0)
+            .setVibrate(longArrayOf(0))
+            .setOnlyAlertOnce(false)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .addAction(R.drawable.ic_check, "צחצחתי! 🪥", brushedPendingIntent)
             .addAction(R.drawable.ic_toothbrush, "נודניק 7 דק'", snoozePendingIntent)
@@ -151,31 +154,60 @@ object NotificationHelper {
 
         val notificationManager = NotificationManagerCompat.from(context)
 
-        // Notify once so notification bridge appears on watch
+        // Initial alert
         try {
             notificationManager.notify(NOTIFICATION_ID, builder.build())
         } catch (_: Exception) {}
 
-        // Multi-pulse loop: Sends direct vibration commands to Wear OS nodes over Google Play Services
-        // This ensures the watch vibrates directly even if phone screen is on, and the phone stays 100% silent!
+        // Multi-pulse loop for watch:
+        // 1. Re-triggers Samsung's bridge every 3 seconds so the GALAXY WATCH buzzes repeatedly on the wrist!
+        // 2. The PHONE stays 100% still and silent because phone vibration is disabled!
+        // 3. Also sends direct Wear OS message in case watch companion is installed!
         pulseJob = CoroutineScope(Dispatchers.IO).launch {
             val prefs = ToothPreferences(context)
-            try {
-                val nodeClient = Wearable.getNodeClient(context)
-                val nodes = Tasks.await(nodeClient.connectedNodes)
-                val messageClient = Wearable.getMessageClient(context)
-                val payload = "pulse".toByteArray(Charsets.UTF_8)
+            val nodeClient = try { Wearable.getNodeClient(context) } catch (_: Exception) { null }
+            val messageClient = try { Wearable.getMessageClient(context) } catch (_: Exception) { null }
+            val payload = "pulse".toByteArray(Charsets.UTF_8)
 
-                for (pulse in 1..5) {
-                    if (prefs.isBrushedToday()) break
-                    for (node in nodes) {
-                        try {
+            for (pulse in 1..4) {
+                if (prefs.isBrushedToday()) break
+
+                // Trigger Samsung Watch Bridge with fresh buzz
+                try {
+                    val pulseBuilder = NotificationCompat.Builder(context, CHANNEL_WATCH)
+                        .setSmallIcon(R.drawable.ic_toothbrush)
+                        .setContentTitle("$title (פעימה $pulse/4)")
+                        .setContentText(body)
+                        .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+                        .setPriority(NotificationCompat.PRIORITY_MAX)
+                        .setCategory(NotificationCompat.CATEGORY_REMINDER)
+                        .setContentIntent(openAppPendingIntent)
+                        .setAutoCancel(true)
+                        .setLocalOnly(false)
+                        .setSound(defaultSoundUri)
+                        .setDefaults(0)
+                        .setVibrate(longArrayOf(0))
+                        .setOnlyAlertOnce(false)
+                        .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                        .addAction(R.drawable.ic_check, "צחצחתי! 🪥", brushedPendingIntent)
+                        .addAction(R.drawable.ic_toothbrush, "נודניק 7 דק'", snoozePendingIntent)
+                        .extend(wearableExtender)
+
+                    notificationManager.notify(NOTIFICATION_ID, pulseBuilder.build())
+                } catch (_: Exception) {}
+
+                // Also send Wear OS direct message
+                try {
+                    if (nodeClient != null && messageClient != null) {
+                        val nodes = Tasks.await(nodeClient.connectedNodes)
+                        for (node in nodes) {
                             Tasks.await(messageClient.sendMessage(node.id, "/vibrate_pulse", payload))
-                        } catch (_: Exception) {}
+                        }
                     }
-                    delay(1600)
-                }
-            } catch (_: Exception) {}
+                } catch (_: Exception) {}
+
+                delay(2800)
+            }
         }
     }
 
