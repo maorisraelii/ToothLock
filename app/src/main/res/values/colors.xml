@@ -1,0 +1,13 @@
+<resources>
+    <color name="primary">#0D47A1</color>
+    <color name="primary_dark">#002171</color>
+    <color name="accent">#00E676</color>
+    <color name="status_red">#E53935</color>
+    <color name="status_red_dark">#B71C1C</color>
+    <color name="status_green">#2E7D32</color>
+    <color name="status_green_dark">#1B5E20</color>
+    <color name="card_bg">#1E222B</color>
+    <color name="surface_dark">#12141A</color>
+    <color name="text_white">#FFFFFF</color>
+    <color name="text_secondary">#B0BEC5</color>
+</resources>

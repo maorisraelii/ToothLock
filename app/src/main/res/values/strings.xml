@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">ToothLock - צחצוח בזמן</string>
+    <string name="widget_name">מעקב צחצוח שיניים</string>
+    <string name="not_brushed_yet">לא צחצחתי היום!</string>
+    <string name="brushed_today">צחצחתי! כל הכבוד ✨</string>
+    <string name="tap_to_toggle">לחץ כדי לשנות סטטוס</string>
+    <string name="reminder_title">🚨 זמן לצחצח שיניים!</string>
+    <string name="reminder_body">שמנו לב שטרם צחצחת שיניים. אל תירדם ככה!</string>
+    <string name="action_brushed_now">צחצחתי עכשיו! 🪥</string>
+    <string name="action_snooze">נודניק 10 דק\'</string>
+</resources>

@@ -1,0 +1,25 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Debug APK",
+            "type": "shell",
+            "command": "./gradlew assembleDebug",
+            "windows": {
+                "command": ".\\gradlew.bat assembleDebug"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Install & Run on Phone (ADB)",
+            "type": "shell",
+            "command": "powershell -ExecutionPolicy Bypass -File .\\install_on_phone.ps1",
+            "group": "build",
+            "problemMatcher": []
+        }
+    ]
+}
