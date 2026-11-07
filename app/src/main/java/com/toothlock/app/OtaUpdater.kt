@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -203,8 +204,23 @@ object OtaUpdater {
 
         val installIntent = Intent(Intent.ACTION_VIEW).apply {
             setDataAndType(apkUri, "application/vnd.android.package-archive")
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
+
+        try {
+            val resInfoList = activity.packageManager.queryIntentActivities(
+                installIntent,
+                PackageManager.MATCH_DEFAULT_ONLY
+            )
+            for (resolveInfo in resInfoList) {
+                activity.grantUriPermission(
+                    resolveInfo.activityInfo.packageName,
+                    apkUri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            }
+        } catch (_: Exception) {}
 
         activity.startActivity(installIntent)
     }
