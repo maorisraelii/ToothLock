@@ -113,7 +113,6 @@ object NotificationHelper {
                     snoozePendingIntent
                 ).build()
             )
-            .setHintShowBackgroundOnlyWhenMining(false)
 
         val notificationBuilder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_toothbrush)

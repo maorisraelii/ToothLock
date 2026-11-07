@@ -7,8 +7,8 @@ import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.content.Context
 import android.provider.Settings
+import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.wearable.Wearable
-import kotlinx.coroutines.tasks.await
 
 class WatchAndSleepDetector(private val context: Context) {
 
@@ -19,7 +19,7 @@ class WatchAndSleepDetector(private val context: Context) {
         // 1. Try official Wearable API (Works for Galaxy Watch 4, 5, 6, 7 and all Wear OS)
         try {
             val nodeClient = Wearable.getNodeClient(context)
-            val nodes = nodeClient.connectedNodes.await()
+            val nodes = Tasks.await(nodeClient.connectedNodes)
             if (nodes.isNotEmpty()) {
                 return true
             }
