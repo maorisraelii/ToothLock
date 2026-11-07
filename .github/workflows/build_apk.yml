@@ -102,9 +102,7 @@ jobs:
           tag_name: ${{ env.TAG_NAME }}
           name: "ToothLock ${{ env.TAG_NAME }}"
           body_path: release_notes.md
-          files: |
-            ToothLock.apk
-            ToothLock-Watch.apk
+          files: ToothLock.apk
 
       - name: Upload APK as Artifact
         uses: actions/upload-artifact@v4
