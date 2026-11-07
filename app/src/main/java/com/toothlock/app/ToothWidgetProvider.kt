@@ -20,6 +20,7 @@ class ToothWidgetProvider : AppWidgetProvider() {
             for (widgetId in appWidgetIds) {
                 updateAppWidget(context, appWidgetManager, widgetId)
             }
+            ToothLockTileService.requestTileUpdate(context)
         }
 
         fun updateAppWidget(
