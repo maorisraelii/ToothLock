@@ -1,88 +1,38 @@
 package com.toothlock.app
 
 import android.Manifest
-import android.app.TimePickerDialog
+import android.annotation.SuppressLint
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.media.AudioManager
-import android.media.ToneGenerator
 import android.os.Build
 import android.os.Bundle
-import android.os.CountDownTimer
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.view.LayoutInflater
+import android.provider.Settings
+import android.view.HapticFeedbackConstants
 import android.view.View
-import android.widget.FrameLayout
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.ProgressBar
-import android.widget.TextView
+import android.webkit.JavascriptInterface
+import android.webkit.WebChromeClient
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.card.MaterialCardView
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.Locale
+import kotlinx.coroutines.runBlocking
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var prefs: ToothPreferences
-    private lateinit var detector: WatchAndSleepDetector
-
-    // Navigation & Tab Containers
-    private lateinit var bottomNav: BottomNavigationView
-    private lateinit var tabHome: View
-    private lateinit var tabLab: View
-    private lateinit var tabSettings: View
-
-    // Home Tab Views
-    private lateinit var cardStatus: MaterialCardView
-    private lateinit var ivStatusIcon: ImageView
-    private lateinit var tvStatusTitle: TextView
-    private lateinit var tvStatusSubtitle: TextView
-    private lateinit var tvStreakHeader: TextView
-    private lateinit var btnToggleStatus: MaterialButton
-    private lateinit var layoutWeekHistory: LinearLayout
-    private lateinit var tvWatchChip: TextView
-    private lateinit var tvSleepChip: TextView
-
-    // Smart Brush Timer Views
-    private lateinit var tvTimerDisplay: TextView
-    private lateinit var tvTimerZone: TextView
-    private lateinit var btnTimerToggle: MaterialButton
-    private lateinit var pbTimerProgress: ProgressBar
-    private var brushTimer: CountDownTimer? = null
-    private var isTimerRunning = false
-
-    // Lab Tab Views
-    private lateinit var tvLabWatchDetails: TextView
-    private lateinit var btnLabCheckWatch: MaterialButton
-    private lateinit var btnLabTestWatchPulse: MaterialButton
-    private lateinit var btnLabTestWatchDelayed: MaterialButton
-    private lateinit var btnOpenGalaxyWearable: MaterialButton
-    private lateinit var btnLabTestPhoneAlarm: MaterialButton
-    private lateinit var tvLabSimStatus: TextView
-    private lateinit var btnLabStartSimulation: MaterialButton
-    private lateinit var tvLabSleepDetails: TextView
-    private var simulationJob: Job? = null
-
-    // Settings Tab Views
-    private lateinit var tvSettingsTargetTime: TextView
-    private lateinit var btnSettingsChangeTime: MaterialButton
-    private lateinit var btnSettingsPinWidget: MaterialButton
-    private lateinit var btnSettingsCheckUpdate: MaterialButton
-    private lateinit var tvSettingsVersionInfo: TextView
+    lateinit var prefs: ToothPreferences
+    lateinit var detector: WatchAndSleepDetector
+    private lateinit var webView: WebView
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -91,9 +41,10 @@ class MainActivity : AppCompatActivity() {
         if (!notifGranted) {
             Toast.makeText(this, "יש לאשר הרשאת התראות כדי לקבל תזכורות לשעון!", Toast.LENGTH_LONG).show()
         }
-        refreshLiveStatus()
+        notifyWebStateChanged()
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -101,414 +52,69 @@ class MainActivity : AppCompatActivity() {
         prefs = ToothPreferences(this)
         detector = WatchAndSleepDetector(this)
 
-        initViews()
-        setupBottomNavigation()
-        setupListeners()
+        setupWebView()
         requestAppPermissions()
-
-        updateUiState()
-        refreshLiveStatus()
 
         // Ensure background bedtime check is scheduled
         ToothCheckWorker.scheduleDailyBedtimeCheck(this)
+    }
 
-        // Silent background check for OTA updates
-        checkForUpdates(manual = false)
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun setupWebView() {
+        webView = findViewById(R.id.web_view)
+
+        webView.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            databaseEnabled = true
+            allowFileAccess = true
+            allowContentAccess = true
+            mediaPlaybackRequiresUserGesture = false
+            cacheMode = WebSettings.LOAD_DEFAULT
+            loadsImagesAutomatically = true
+        }
+
+        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+        webView.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                notifyWebStateChanged()
+            }
+        }
+        webView.webChromeClient = WebChromeClient()
+
+        // Expose Native Android Bridge to Web View
+        webView.addJavascriptInterface(ToothLockBridge(this), "ToothLockBridge")
+
+        // Load the local HTML bundle (which includes the PriceRadar-style live OTA engine)
+        webView.loadUrl("file:///android_asset/www/index.html")
     }
 
     override fun onResume() {
         super.onResume()
-        updateUiState()
-        refreshLiveStatus()
+        notifyWebStateChanged()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        brushTimer?.cancel()
-        simulationJob?.cancel()
-    }
-
-    private fun initViews() {
-        bottomNav = findViewById(R.id.bottom_navigation)
-        tabHome = findViewById(R.id.tab_content_home)
-        tabLab = findViewById(R.id.tab_content_lab)
-        tabSettings = findViewById(R.id.tab_content_settings)
-
-        // Home
-        cardStatus = findViewById(R.id.card_status)
-        ivStatusIcon = findViewById(R.id.iv_status_icon)
-        tvStatusTitle = findViewById(R.id.tv_status_title)
-        tvStatusSubtitle = findViewById(R.id.tv_status_subtitle)
-        tvStreakHeader = findViewById(R.id.tv_streak_header)
-        btnToggleStatus = findViewById(R.id.btn_toggle_status)
-        layoutWeekHistory = findViewById(R.id.layout_week_history)
-        tvWatchChip = findViewById(R.id.tv_watch_chip)
-        tvSleepChip = findViewById(R.id.tv_sleep_chip)
-
-        // Timer
-        tvTimerDisplay = findViewById(R.id.tv_timer_display)
-        tvTimerZone = findViewById(R.id.tv_timer_zone)
-        btnTimerToggle = findViewById(R.id.btn_timer_toggle)
-        pbTimerProgress = findViewById(R.id.pb_timer_progress)
-
-        // Lab
-        tvLabWatchDetails = findViewById(R.id.tv_lab_watch_details)
-        btnLabCheckWatch = findViewById(R.id.btn_lab_check_watch)
-        btnLabTestWatchPulse = findViewById(R.id.btn_lab_test_watch_pulse)
-        btnLabTestWatchDelayed = findViewById(R.id.btn_lab_test_watch_delayed)
-        btnOpenGalaxyWearable = findViewById(R.id.btn_open_galaxy_wearable)
-        btnLabTestPhoneAlarm = findViewById(R.id.btn_lab_test_phone_alarm)
-        tvLabSimStatus = findViewById(R.id.tv_lab_sim_status)
-        btnLabStartSimulation = findViewById(R.id.btn_lab_start_simulation)
-        tvLabSleepDetails = findViewById(R.id.tv_lab_sleep_details)
-
-        // Settings
-        tvSettingsTargetTime = findViewById(R.id.tv_settings_target_time)
-        btnSettingsChangeTime = findViewById(R.id.btn_settings_change_time)
-        btnSettingsPinWidget = findViewById(R.id.btn_settings_pin_widget)
-        btnSettingsCheckUpdate = findViewById(R.id.btn_settings_check_update)
-        tvSettingsVersionInfo = findViewById(R.id.tv_settings_version_info)
-    }
-
-    private fun setupBottomNavigation() {
-        bottomNav.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_home -> {
-                    tabHome.visibility = View.VISIBLE
-                    tabLab.visibility = View.GONE
-                    tabSettings.visibility = View.GONE
-                    updateUiState()
-                    true
-                }
-                R.id.nav_lab -> {
-                    tabHome.visibility = View.GONE
-                    tabLab.visibility = View.VISIBLE
-                    tabSettings.visibility = View.GONE
-                    refreshLabDiagnostics()
-                    true
-                }
-                R.id.nav_settings -> {
-                    tabHome.visibility = View.GONE
-                    tabLab.visibility = View.GONE
-                    tabSettings.visibility = View.VISIBLE
-                    updateSettingsUi()
-                    true
-                }
-                else -> false
-            }
+    fun notifyWebStateChanged() {
+        runOnUiThread {
+            webView.evaluateJavascript("if (window.onNativeStateChanged) window.onNativeStateChanged();", null)
         }
     }
 
-    private fun setupListeners() {
-        // Toggle Brushed Status
-        btnToggleStatus.setOnClickListener {
-            val current = prefs.isBrushedToday()
-            val newStatus = !current
-            prefs.setBrushedToday(newStatus)
-
-            if (newStatus) {
-                NotificationHelper.cancelNotification(this)
-                Toast.makeText(this, "מעולה! סומן שצחצחת שיניים 🪥✨", Toast.LENGTH_SHORT).show()
-            }
-
-            updateUiState()
+    fun syncWidgetAndTile() {
+        runOnUiThread {
             ToothWidgetProvider.updateAllWidgets(this)
-        }
-
-        // Smart 2-Minute Brush Timer
-        btnTimerToggle.setOnClickListener {
-            if (isTimerRunning) {
-                stopBrushTimer()
-            } else {
-                startBrushTimer()
-            }
-        }
-
-        // Lab: Check Watch Diagnostic
-        btnLabCheckWatch.setOnClickListener {
-            refreshLabDiagnostics()
-        }
-
-        // Lab: Test Watch-Only Multi-Pulse (Direct)
-        btnLabTestWatchPulse.setOnClickListener {
-            lifecycleScope.launch {
-                val isSleeping = detector.isSleepModeActive()
-                NotificationHelper.sendWatchFocusedAlert(this@MainActivity, alertIndex = 1, isSleeping = isSleeping)
-                Toast.makeText(this@MainActivity, "נשלח רטט ישיר לשעון! הטלפון שקט כדי לא להרעיש ⌚✨", Toast.LENGTH_LONG).show()
-            }
-        }
-
-        // Lab: Test Watch-Only Multi-Pulse Delayed (Allows locking phone screen to verify Samsung bridge)
-        btnLabTestWatchDelayed.setOnClickListener {
-            Toast.makeText(this@MainActivity, "🔒 כבה/נעל את מסך הטלפון כעת! הרטט יישלח בעוד 3 שניות...", Toast.LENGTH_LONG).show()
-            lifecycleScope.launch {
-                delay(3500)
-                val isSleeping = detector.isSleepModeActive()
-                NotificationHelper.sendWatchFocusedAlert(this@MainActivity, alertIndex = 1, isSleeping = isSleeping)
-            }
-        }
-
-        // Lab: Open Galaxy Wearable notification settings
-        val openWearableAction = {
-            try {
-                val intent = packageManager.getLaunchIntentForPackage("com.samsung.android.app.watchmanager")
-                if (intent != null) {
-                    startActivity(intent)
-                } else {
-                    val fallback = Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                        putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, packageName)
-                    }
-                    startActivity(fallback)
-                }
-            } catch (_: Exception) {
-                Toast.makeText(this, "לא ניתן לפתוח את אפליקציית Galaxy Wearable", Toast.LENGTH_SHORT).show()
-            }
-        }
-        btnOpenGalaxyWearable.setOnClickListener { openWearableAction() }
-        findViewById<android.view.View>(R.id.btn_open_galaxy_wearable_banner)?.setOnClickListener { openWearableAction() }
-
-        // Lab: Test Phone Emergency Alarm
-        btnLabTestPhoneAlarm.setOnClickListener {
-            NotificationHelper.sendEmergencyPhoneAlarm(this)
-            Toast.makeText(this, "אזעקת חירום בטלפון הופעלה (שלב 4)! לחץ על ההתראה לכבות.", Toast.LENGTH_LONG).show()
-        }
-
-        // Lab: Full Escalation Simulation
-        btnLabStartSimulation.setOnClickListener {
-            runEscalationSimulation()
-        }
-
-        // Settings: Change Target Bedtime
-        btnSettingsChangeTime.setOnClickListener {
-            TimePickerDialog(
-                this,
-                { _, hourOfDay, minute ->
-                    prefs.targetHour = hourOfDay
-                    prefs.targetMinute = minute
-                    updateSettingsUi()
-                    ToothCheckWorker.scheduleDailyBedtimeCheck(this)
-                    Toast.makeText(this, "שעת היעד עודכנה בהצלחה!", Toast.LENGTH_SHORT).show()
-                },
-                prefs.targetHour,
-                prefs.targetMinute,
-                true
-            ).show()
-        }
-
-        // Settings: Pin Home Screen Widget
-        btnSettingsPinWidget.setOnClickListener {
-            pinHomeScreenWidget()
-        }
-
-        // Settings: Check Updates (OTA)
-        btnSettingsCheckUpdate.setOnClickListener {
-            checkForUpdates(manual = true)
+            ToothLockTileService.requestTileUpdate(this)
         }
     }
 
-    private fun updateUiState() {
-        val isBrushed = prefs.isBrushedToday()
-        val streak = prefs.getStreak()
-
-        tvStreakHeader.text = "🔥 $streak ימים"
-
-        if (isBrushed) {
-            ivStatusIcon.setImageResource(R.drawable.ic_check)
-            tvStatusTitle.text = "צחצחת היום! נקי ומצוחצח ✨"
-            tvStatusTitle.setTextColor(ContextCompat.getColor(this, R.color.status_green))
-            tvStatusSubtitle.text = "כל הכבוד על השמירה על השיניים!"
-            btnToggleStatus.text = "בטל סימון (טרם צחצחתי)"
-            btnToggleStatus.setBackgroundColor(ContextCompat.getColor(this, R.color.status_red))
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        if (this::webView.isInitialized && webView.canGoBack()) {
+            webView.goBack()
         } else {
-            ivStatusIcon.setImageResource(R.drawable.ic_toothbrush)
-            tvStatusTitle.text = "טרם צחצחת שיניים היום!"
-            tvStatusTitle.setTextColor(ContextCompat.getColor(this, R.color.status_red))
-            tvStatusSubtitle.text = "השעון ירעיד את היד שלך בשעת היעד"
-            btnToggleStatus.text = "סמן כ'צחצחתי' 🪥✨"
-            btnToggleStatus.setBackgroundColor(ContextCompat.getColor(this, R.color.status_green))
+            super.onBackPressed()
         }
-
-        populateWeekHistory()
-        updateSettingsUi()
-    }
-
-    private fun populateWeekHistory() {
-        layoutWeekHistory.removeAllViews()
-        val history = prefs.getLast7DaysHistory()
-        val inflater = LayoutInflater.from(this)
-
-        for (item in history) {
-            val view = inflater.inflate(R.layout.item_day_history, layoutWeekHistory, false)
-            val tvLabel = view.findViewById<TextView>(R.id.tv_day_label)
-            val flCircle = view.findViewById<FrameLayout>(R.id.fl_day_circle)
-            val ivStatus = view.findViewById<ImageView>(R.id.iv_day_status)
-
-            tvLabel.text = item.dayName
-
-            if (item.isBrushed) {
-                flCircle.setBackgroundResource(R.drawable.circle_day_green)
-                ivStatus.setImageResource(R.drawable.ic_check)
-                ivStatus.visibility = View.VISIBLE
-            } else {
-                flCircle.setBackgroundResource(R.drawable.circle_day_inactive)
-                ivStatus.visibility = View.INVISIBLE
-            }
-
-            if (item.isToday) {
-                tvLabel.setTextColor(ContextCompat.getColor(this, R.color.text_white))
-                tvLabel.text = "${item.dayName} (היום)"
-            }
-
-            layoutWeekHistory.addView(view)
-        }
-    }
-
-    private fun startBrushTimer() {
-        isTimerRunning = true
-        btnTimerToggle.text = "עצור טיימר ■"
-        btnTimerToggle.setBackgroundColor(ContextCompat.getColor(this, R.color.status_red))
-
-        brushTimer = object : CountDownTimer(120000, 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                val totalSeconds = (millisUntilFinished / 1000).toInt()
-                val minutes = totalSeconds / 60
-                val seconds = totalSeconds % 60
-                tvTimerDisplay.text = String.format(Locale.US, "%02d:%02d", minutes, seconds)
-                pbTimerProgress.progress = totalSeconds
-
-                // Update Quadrant instruction every 30 seconds
-                when (totalSeconds) {
-                    in 91..120 -> tvTimerZone.text = "חלק 1/4: לסת עליונה ימין"
-                    in 61..90 -> {
-                        tvTimerZone.text = "חלק 2/4: לסת עליונה שמאל"
-                        if (totalSeconds == 90) gentleVibrate()
-                    }
-                    in 31..60 -> {
-                        tvTimerZone.text = "חלק 3/4: לסת תחתונה ימין"
-                        if (totalSeconds == 60) gentleVibrate()
-                    }
-                    in 1..30 -> {
-                        tvTimerZone.text = "חלק 4/4: לסת תחתונה שמאל"
-                        if (totalSeconds == 30) gentleVibrate()
-                    }
-                }
-            }
-
-            override fun onFinish() {
-                isTimerRunning = false
-                tvTimerDisplay.text = "00:00"
-                tvTimerZone.text = "צחצוח הושלם בהצלחה! ✨🦷"
-                btnTimerToggle.text = "התחל שוב ▶"
-                btnTimerToggle.setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.primary))
-                pbTimerProgress.progress = 0
-
-                // Mark brushed and update streak automatically!
-                prefs.setBrushedToday(true)
-                NotificationHelper.cancelNotification(this@MainActivity)
-                updateUiState()
-                ToothWidgetProvider.updateAllWidgets(this@MainActivity)
-
-                longSuccessVibrate()
-                Toast.makeText(this@MainActivity, "כל הכבוד! סיימת 2 דקות צחצוח מלאות 🪥🎉", Toast.LENGTH_LONG).show()
-            }
-        }.start()
-    }
-
-    private fun stopBrushTimer() {
-        brushTimer?.cancel()
-        isTimerRunning = false
-        tvTimerDisplay.text = "02:00"
-        tvTimerZone.text = "30 שנ' לכל רבע פה"
-        btnTimerToggle.text = "התחל צחצוח ▶"
-        btnTimerToggle.setBackgroundColor(ContextCompat.getColor(this, R.color.primary))
-        pbTimerProgress.progress = 120
-    }
-
-    private fun gentleVibrate() {
-        val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator?.vibrate(VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE))
-        } else {
-            @Suppress("DEPRECATION")
-            vibrator?.vibrate(150)
-        }
-        try {
-            val toneGen = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 80)
-            toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 150)
-        } catch (_: Exception) {}
-    }
-
-    private fun longSuccessVibrate() {
-        val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
-        val pattern = longArrayOf(0, 200, 100, 200, 100, 400)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator?.vibrate(VibrationEffect.createWaveform(pattern, -1))
-        } else {
-            @Suppress("DEPRECATION")
-            vibrator?.vibrate(pattern, -1)
-        }
-        try {
-            val toneGen = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 90)
-            toneGen.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 350)
-        } catch (_: Exception) {}
-    }
-
-    private fun refreshLiveStatus() {
-        lifecycleScope.launch {
-            val isConnected = detector.isSmartWatchConnected()
-            val isSleeping = detector.isSleepModeActive()
-
-            tvWatchChip.text = if (isConnected) "שעון: מחובר ✅" else "שעון: לא זוהה ⚠️"
-            tvSleepChip.text = if (isSleeping) "שינה: פעיל 🌙" else "שינה: כבוי ☀️"
-        }
-    }
-
-    private fun refreshLabDiagnostics() {
-        lifecycleScope.launch {
-            tvLabWatchDetails.text = "סורק התקנים..."
-            val diag = detector.getWatchDiagnostic()
-            tvLabWatchDetails.text = "${diag.details}\nפרוטוקול: ${diag.connectionType}"
-
-            tvLabSleepDetails.text = detector.getSleepModeDiagnostic()
-        }
-    }
-
-    private fun runEscalationSimulation() {
-        simulationJob?.cancel()
-        simulationJob = lifecycleScope.launch {
-            btnLabStartSimulation.isEnabled = false
-            try {
-                tvLabSimStatus.text = "▶ [שלב 1/4]: שולח תזכורת 1 לשעון (רטט ממושך)..."
-                NotificationHelper.sendWatchFocusedAlert(this@MainActivity, 1)
-                delay(4000)
-
-                tvLabSimStatus.text = "▶ [שלב 2/4]: שולח תזכורת 2 לשעון..."
-                NotificationHelper.sendWatchFocusedAlert(this@MainActivity, 2)
-                delay(4000)
-
-                tvLabSimStatus.text = "▶ [שלב 3/4]: שולח תזכורת 3 אחרונה לשעון..."
-                NotificationHelper.sendWatchFocusedAlert(this@MainActivity, 3)
-                delay(4000)
-
-                tvLabSimStatus.text = "💥 [שלב 4/4 - הסלמה!]: 3 התראות לא נענו! מפעיל אזעקת חירום בטלפון!"
-                NotificationHelper.sendEmergencyPhoneAlarm(this@MainActivity)
-                delay(4000)
-
-                tvLabSimStatus.text = "✅ סימולציית ההסלמה הושלמה בהצלחה! כל השרשרת פועלת תקין."
-            } finally {
-                btnLabStartSimulation.isEnabled = true
-            }
-        }
-    }
-
-    private fun updateSettingsUi() {
-        val h = String.format(Locale.US, "%02d", prefs.targetHour)
-        val m = String.format(Locale.US, "%02d", prefs.targetMinute)
-        tvSettingsTargetTime.text = "$h:$m"
-
-        val pInfo = try { packageManager.getPackageInfo(packageName, 0) } catch (_: Exception) { null }
-        val ver = pInfo?.versionName ?: "1.0.12"
-        tvSettingsVersionInfo.text = "ToothLock v$ver • מניעת שינה ללא צחצוח שיניים"
     }
 
     private fun requestAppPermissions() {
@@ -533,39 +139,53 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkForUpdates(manual: Boolean) {
+    fun pinHomeScreenWidget() {
+        val appWidgetManager = AppWidgetManager.getInstance(this)
+        val myProvider = ComponentName(this, ToothWidgetProvider::class.java)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (appWidgetManager.isRequestPinAppWidgetSupported) {
+                appWidgetManager.requestPinAppWidget(myProvider, null, null)
+                Toast.makeText(this, "הנח את הווידג'ט במסך הבית שלך", Toast.LENGTH_SHORT).show()
+                return
+            }
+        }
+        Toast.makeText(this, "הוסף את הווידג'ט דרך לחיצה ארוכה במסך הבית", Toast.LENGTH_LONG).show()
+    }
+
+    fun checkForUpdates(manual: Boolean) {
         val pInfo = try { packageManager.getPackageInfo(packageName, 0) } catch (_: Exception) { null }
         val currentVer = pInfo?.versionName ?: "1.0.0"
 
         lifecycleScope.launch {
             if (manual) {
-                Toast.makeText(this@MainActivity, "בודק עדכונים ב-GitHub...", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "בודק עדכוני APK ב-GitHub Releases...", Toast.LENGTH_SHORT).show()
             }
             val release = OtaUpdater.checkLatestRelease()
             if (release != null && OtaUpdater.isNewerVersion(currentVer, release.tagName)) {
                 showUpdateDialog(release)
             } else if (manual) {
-                Toast.makeText(this@MainActivity, "האפליקציה מעודכנת לגרסה האחרונה ($currentVer) ✨", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "גרסת ה-APK מעודכנת לגרסה האחרונה ($currentVer) ✨", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun showUpdateDialog(release: ReleaseInfo) {
         val builder = AlertDialog.Builder(this)
-        builder.setTitle("🚀 עדכון גרסה חדש זמין (${release.tagName})")
+        builder.setTitle("🚀 עדכון קובץ APK זמין (${release.tagName})")
         val notes = if (release.body.isNotBlank()) release.body else "גרסה חדשה של ToothLock זמינה להתקנה."
-        builder.setMessage("$notes\n\nהאם ברצונך להוריד ולהתקין את העדכון כעת?")
-        builder.setPositiveButton("הורד ועדכן עכשיו") { _, _ ->
+        builder.setMessage("$notes\n\nהאם ברצונך להוריד ולהתקין את קובץ ה-APK כעת?")
+        builder.setPositiveButton("הורד ועדכן כעת") { _, _ ->
             startOtaDownload(release)
         }
-        builder.setNegativeButton("הזכר לי מחר", null)
+        builder.setNegativeButton("סגור", null)
         builder.show()
     }
 
     @Suppress("DEPRECATION")
     private fun startOtaDownload(release: ReleaseInfo) {
         val progressDialog = android.app.ProgressDialog(this).apply {
-            setTitle("מוריד עדכון גרסה...")
+            setTitle("מוריד קובץ APK...")
             setMessage("אנא המתן, מוריד את ToothLock ${release.tagName}...")
             setProgressStyle(android.app.ProgressDialog.STYLE_HORIZONTAL)
             max = 100
@@ -587,17 +207,164 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun pinHomeScreenWidget() {
-        val appWidgetManager = AppWidgetManager.getInstance(this)
-        val myProvider = ComponentName(this, ToothWidgetProvider::class.java)
+    // =========================================================================
+    // JAVASCRIPT INTERFACE BRIDGE
+    // Connects index.html Web UI & PriceRadar-style Live OTA to Kotlin logic
+    // =========================================================================
+    class ToothLockBridge(private val activity: MainActivity) {
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (appWidgetManager.isRequestPinAppWidgetSupported) {
-                appWidgetManager.requestPinAppWidget(myProvider, null, null)
-                Toast.makeText(this, "הנח את הווידג'ט במסך הבית שלך", Toast.LENGTH_SHORT).show()
-                return
+        @JavascriptInterface
+        fun isBrushedToday(): Boolean {
+            return activity.prefs.isBrushedToday()
+        }
+
+        @JavascriptInterface
+        fun setBrushedToday(brushed: Boolean) {
+            activity.runOnUiThread {
+                activity.prefs.setBrushedToday(brushed)
+                if (brushed) {
+                    NotificationHelper.cancelNotification(activity)
+                }
+                activity.syncWidgetAndTile()
             }
         }
-        Toast.makeText(this, "הוסף את הווידג'ט דרך לחיצה ארוכה במסך הבית", Toast.LENGTH_LONG).show()
+
+        @JavascriptInterface
+        fun getStreak(): Int {
+            return activity.prefs.getStreak()
+        }
+
+        @JavascriptInterface
+        fun getTargetHour(): Int {
+            return activity.prefs.targetHour
+        }
+
+        @JavascriptInterface
+        fun getTargetMinute(): Int {
+            return activity.prefs.targetMinute
+        }
+
+        @JavascriptInterface
+        fun setTargetTime(hour: Int, minute: Int) {
+            activity.runOnUiThread {
+                activity.prefs.targetHour = hour
+                activity.prefs.targetMinute = minute
+                ToothCheckWorker.scheduleDailyBedtimeCheck(activity)
+                val mFormatted = String.format("%02d", minute)
+                Toast.makeText(activity, "שעת היעד עודכנה ל-$hour:$mFormatted!", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        @JavascriptInterface
+        fun isGalaxyWatchConnected(): Boolean {
+            return runBlocking(Dispatchers.IO) {
+                activity.detector.isSmartWatchConnected()
+            }
+        }
+
+        @JavascriptInterface
+        fun getWatchName(): String {
+            return runBlocking(Dispatchers.IO) {
+                activity.detector.getWatchDiagnostic().deviceName.ifBlank { "Galaxy Watch" }
+            }
+        }
+
+        @JavascriptInterface
+        fun isSleepModeActive(): Boolean {
+            return activity.detector.isSleepModeActive()
+        }
+
+        @JavascriptInterface
+        fun sendWatchAlert(alertIndex: Int) {
+            activity.lifecycleScope.launch {
+                val isSleeping = activity.detector.isSleepModeActive()
+                NotificationHelper.sendWatchFocusedAlert(activity, alertIndex, isSleeping)
+            }
+        }
+
+        @JavascriptInterface
+        fun sendDelayedWatchAlert(delaySeconds: Int) {
+            activity.lifecycleScope.launch {
+                delay((delaySeconds * 1000).toLong())
+                val isSleeping = activity.detector.isSleepModeActive()
+                NotificationHelper.sendWatchFocusedAlert(activity, 1, isSleeping)
+            }
+        }
+
+        @JavascriptInterface
+        fun sendEmergencyPhoneAlarm() {
+            activity.runOnUiThread {
+                NotificationHelper.sendEmergencyPhoneAlarm(activity)
+            }
+        }
+
+        @JavascriptInterface
+        fun openGalaxyWearable() {
+            activity.runOnUiThread {
+                try {
+                    val intent = activity.packageManager.getLaunchIntentForPackage("com.samsung.android.app.watchmanager")
+                    if (intent != null) {
+                        activity.startActivity(intent)
+                    } else {
+                        val fallback = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                            putExtra(Settings.EXTRA_APP_PACKAGE, activity.packageName)
+                        }
+                        activity.startActivity(fallback)
+                    }
+                } catch (_: Exception) {
+                    Toast.makeText(activity, "לא ניתן לפתוח את אפליקציית Galaxy Wearable", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun pinHomeScreenWidget() {
+            activity.runOnUiThread {
+                activity.pinHomeScreenWidget()
+            }
+        }
+
+        @JavascriptInterface
+        fun triggerHaptic(type: String) {
+            activity.runOnUiThread {
+                val view = activity.window.decorView
+                if (type == "heavy") {
+                    view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                } else {
+                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun getNativeBuildCode(): Int {
+            val pInfo = try { activity.packageManager.getPackageInfo(activity.packageName, 0) } catch (_: Exception) { null }
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                pInfo?.longVersionCode?.toInt() ?: 130
+            } else {
+                @Suppress("DEPRECATION")
+                pInfo?.versionCode ?: 130
+            }
+        }
+
+        @JavascriptInterface
+        fun getNativeVersionName(): String {
+            val pInfo = try { activity.packageManager.getPackageInfo(activity.packageName, 0) } catch (_: Exception) { null }
+            return pInfo?.versionName ?: "1.0.30"
+        }
+
+        @JavascriptInterface
+        fun downloadAndInstallApk() {
+            activity.runOnUiThread {
+                activity.checkForUpdates(manual = true)
+            }
+        }
+
+        @JavascriptInterface
+        fun showToast(message: String) {
+            activity.runOnUiThread {
+                Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }

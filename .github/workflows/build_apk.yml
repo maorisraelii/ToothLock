@@ -51,7 +51,8 @@ jobs:
         id: versioning
         run: |
           RUN_NUM="${{ github.run_number }}"
-          export VERSION_NAME="1.0.${RUN_NUM}"
+          BASE_VER=$(grep -oP 'window\.__APP_VERSION__\s*=\s*"\K[^"]+' app/src/main/assets/www/index.html || echo "1.0.${RUN_NUM}")
+          export VERSION_NAME="${BASE_VER}"
           export VERSION_CODE=$((100 + RUN_NUM))
           export TAG_NAME="v${VERSION_NAME}"
           echo "VERSION_NAME=${VERSION_NAME}" >> $GITHUB_ENV
@@ -59,24 +60,33 @@ jobs:
           echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
 
           python3 - << 'PYEOF'
-          import os, subprocess
+          import os, re, subprocess
           ver = os.environ.get("VERSION_NAME", "1.0.1")
           code = os.environ.get("VERSION_CODE", "101")
+          notes = ""
+          html_path = "app/src/main/assets/www/index.html"
+          if os.path.exists(html_path):
+              with open(html_path, "r", encoding="utf-8") as f:
+                  m = re.search(r'window\.__OTA_RELEASE_NOTES__\s*=\s*"([^"]+)"', f.read())
+                  if m:
+                      notes = m.group(1)
+          if not notes:
+              notes = "מנוע עדכונים Over-The-Air חי מהענן (כמו ב-PriceRadar), ממשק משופר, טיימר צחצוח חכם ובדיקות מעבדה."
           commit_msg = subprocess.check_output(["git", "log", "-1", "--pretty=%s"], text=True).strip()
 
           md = f"""## 🪥 ToothLock v{ver} (Build {code})
 
           ### 🚀 מה חדש בגרסה זו:
-          - **ווידג'ט מסך הבית:** סימון מהיר של צחצוח שיניים ישירות ממסך הבית (אדום/ירוק וספירת רצף).
-          - **זיהוי שעון סמסונג:** בדיקה האם ה-Galaxy Watch מחובר לטלפון.
-          - **זיהוי שינה (Bedtime / Sleep Mode):** התראה רוטטת חזקה שעוקפת מצב שינה ומעירה אותך בזמן.
-          - **פעולות ישירות מהשעון:** כפתור "צחצחתי עכשיו!" ו"נודניק 10 דקות".
+          - **מנוע עדכונים Over-The-Air (בדיוק כמו PriceRadar!):** עדכוני ממשק, פיצ'רים ותיקונים מתעדכנים מיידית מהענן ללא צורך בהורדת קובץ APK!
+          - {notes}
+          - **ווידג'ט מסך הבית:** סנכרון דו-כיווני מלא ואפשרות סימון ישירה ממסך הבית.
+          - **סנכרון מלא ל-Samsung Galaxy Watch:** רטט מורגש ישירות על היד דרך מנגנון ההתראות של סמסונג.
 
           ### 📝 פירוט עדכון:
           - `{commit_msg}`
 
           ---
-          📦 **הורדה ישירה:** הורד את קובץ ה-APK המצורף (`ToothLock.apk`) והתקן ישירות בטלפון הגלקסי שלך (ניתן להתקין מעל גרסה קודמת).
+          📦 **הורדה ישירה:** הורד את קובץ ה-APK המצורף (`ToothLock.apk`) במידה ונדרש עדכון ליבה מקומי.
           """
           with open("release_notes.md", "w", encoding="utf-8") as out:
               out.write("\n".join(line.lstrip() for line in md.strip().splitlines()) + "\n")
