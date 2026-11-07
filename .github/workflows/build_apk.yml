@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 permissions:
   contents: write
@@ -90,6 +92,7 @@ jobs:
           cp app/build/outputs/apk/debug/app-debug.apk ToothLock.apk
 
       - name: Publish Direct GitHub Release
+        if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG_NAME }}

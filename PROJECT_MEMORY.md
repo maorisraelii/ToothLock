@@ -23,3 +23,16 @@
 - **Persistent Signing Keystore:** `toothlock-signing.keystore` is auto-generated on the first CI run and committed back to the repository. This guarantees all future APKs share the exact same signature so users can update seamlessly without uninstalling or losing streak data.
 - **Automated Releases:** Every push to `main` builds `ToothLock.apk` and publishes a GitHub Release tagged `v1.0.<run_number>` with Hebrew release notes.
 - **Local / Remote Script:** `build_apk.ps1` allows 1-click cloud build and download or local compilation + automatic ADB installation.
+
+---
+
+## 3. Development Workflow Rule: Pull Requests (PR) Only
+- **Strict Rule:** Always work with branches and Pull Requests. Do not push directly to `main`.
+- **Workflow Steps:**
+  1. Create a descriptive branch: `git checkout -b feature/xyz` or `fix/xyz`.
+  2. Implement changes, test thoroughly.
+  3. Commit and push branch to origin: `git push -u origin <branch-name>`.
+  4. Open a Pull Request using `gh pr create --title "..." --body "..."`.
+  5. The PR triggers automated build verification in GitHub Actions.
+  6. Present the PR to the user for review/approval before merging to `main`.
+
