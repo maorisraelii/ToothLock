@@ -434,8 +434,27 @@
                             android:layout_height="48dp"
                             android:layout_marginTop="10dp"
                             android:backgroundTint="#2979FF"
-                            android:text="⌚ הפעל רטט 5 פעימות בשעון"
+                            android:text="⌚ הפעל רטט ישיר בשעון עכשיו"
                             app:cornerRadius="12dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_lab_test_watch_delayed"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:layout_marginTop="8dp"
+                            android:text="⏱️ רטט בעוד 3 שניות (לכיבוי מסך הטלפון)"
+                            android:textColor="#80D8FF"
+                            app:cornerRadius="12dp"
+                            app:strokeColor="#80D8FF" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="💡 טיפ סמסונג: כדי שההתראה תגיע לשעון ללא אפליקציית השעון, יש לוודא ב-Galaxy Wearable -> התראות שמופעל 'הצג התראות גם כשהטלפון בשימוש' או לכבות מסך."
+                            android:textColor="#FFD54F"
+                            android:textSize="11sp" />
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>

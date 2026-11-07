@@ -68,6 +68,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvLabWatchDetails: TextView
     private lateinit var btnLabCheckWatch: MaterialButton
     private lateinit var btnLabTestWatchPulse: MaterialButton
+    private lateinit var btnLabTestWatchDelayed: MaterialButton
     private lateinit var btnLabTestPhoneAlarm: MaterialButton
     private lateinit var tvLabSimStatus: TextView
     private lateinit var btnLabStartSimulation: MaterialButton
@@ -152,6 +153,7 @@ class MainActivity : AppCompatActivity() {
         tvLabWatchDetails = findViewById(R.id.tv_lab_watch_details)
         btnLabCheckWatch = findViewById(R.id.btn_lab_check_watch)
         btnLabTestWatchPulse = findViewById(R.id.btn_lab_test_watch_pulse)
+        btnLabTestWatchDelayed = findViewById(R.id.btn_lab_test_watch_delayed)
         btnLabTestPhoneAlarm = findViewById(R.id.btn_lab_test_phone_alarm)
         tvLabSimStatus = findViewById(R.id.tv_lab_sim_status)
         btnLabStartSimulation = findViewById(R.id.btn_lab_start_simulation)
@@ -224,12 +226,22 @@ class MainActivity : AppCompatActivity() {
             refreshLabDiagnostics()
         }
 
-        // Lab: Test Watch-Only Multi-Pulse
+        // Lab: Test Watch-Only Multi-Pulse (Direct)
         btnLabTestWatchPulse.setOnClickListener {
             lifecycleScope.launch {
                 val isSleeping = detector.isSleepModeActive()
                 NotificationHelper.sendWatchFocusedAlert(this@MainActivity, alertIndex = 1, isSleeping = isSleeping)
-                Toast.makeText(this@MainActivity, "נשלח רטט 5 פעימות לשעון! הטלפון שקט כדי לא להרעיש ⌚✨", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@MainActivity, "נשלח רטט ישיר לשעון! הטלפון שקט כדי לא להרעיש ⌚✨", Toast.LENGTH_LONG).show()
+            }
+        }
+
+        // Lab: Test Watch-Only Multi-Pulse Delayed (Allows locking phone screen to verify Samsung bridge)
+        btnLabTestWatchDelayed.setOnClickListener {
+            Toast.makeText(this@MainActivity, "🔒 כבה/נעל את מסך הטלפון כעת! הרטט יישלח בעוד 3 שניות...", Toast.LENGTH_LONG).show()
+            lifecycleScope.launch {
+                delay(3500)
+                val isSleeping = detector.isSleepModeActive()
+                NotificationHelper.sendWatchFocusedAlert(this@MainActivity, alertIndex = 1, isSleeping = isSleeping)
             }
         }
 

@@ -19,6 +19,10 @@ data class WatchDiagnostic(
 
 class WatchAndSleepDetector(private val context: Context) {
 
+    companion object {
+        var cachedWatchWornOnBody: Boolean? = null
+    }
+
     /**
      * Checks if a smartwatch (Galaxy Watch / Wear OS) is currently connected
      */
@@ -27,20 +31,41 @@ class WatchAndSleepDetector(private val context: Context) {
     }
 
     /**
+     * Queries connected watch for on-body sensor status
+     */
+    suspend fun queryOnBodyStatus() {
+        try {
+            val nodeClient = Wearable.getNodeClient(context)
+            val nodes = Tasks.await(nodeClient.connectedNodes)
+            val messageClient = Wearable.getMessageClient(context)
+            for (node in nodes) {
+                Tasks.await(messageClient.sendMessage(node.id, "/check_on_body", byteArrayOf(1)))
+            }
+        } catch (_: Exception) {}
+    }
+
+    /**
      * Returns detailed diagnostic information for the Test Lab.
      */
     suspend fun getWatchDiagnostic(): WatchDiagnostic {
+        queryOnBodyStatus()
+
         // 1. Google Play Services Wearable API
         try {
             val nodeClient = Wearable.getNodeClient(context)
             val nodes = Tasks.await(nodeClient.connectedNodes)
             if (nodes.isNotEmpty()) {
                 val node = nodes.first()
+                val wornText = when (cachedWatchWornOnBody) {
+                    true -> " • ענוד על היד (חיישן מגע פעיל ✅)"
+                    false -> " • הוסר מהיד (חיישן מגע כבוי ⚠️)"
+                    null -> " • ממתין לקריאת חיישן ענידה..."
+                }
                 return WatchDiagnostic(
                     isConnected = true,
                     deviceName = node.displayName,
                     connectionType = "Google Wearable DataLayer",
-                    details = "שעון מחובר פעיל: ${node.displayName} (Node ID: ${node.id.take(8)}...)"
+                    details = "שעון מחובר: ${node.displayName}$wornText"
                 )
             }
         } catch (_: Exception) {}

@@ -3,6 +3,13 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+val appVersionCode = project.findProperty("versionCode")?.toString()?.toIntOrNull()
+    ?: System.getenv("VERSION_CODE")?.toIntOrNull()
+    ?: 1
+val appVersionName = project.findProperty("versionName")?.toString()
+    ?: System.getenv("VERSION_NAME")
+    ?: "1.0.0"
+
 android {
     namespace = "com.toothlock.app"
     compileSdk = 34
@@ -11,8 +18,8 @@ android {
         applicationId = "com.toothlock.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = appVersionCode
+        versionName = appVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
