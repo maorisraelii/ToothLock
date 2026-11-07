@@ -244,5 +244,15 @@
             app:cornerRadius="14dp"
             app:strokeColor="#80D8FF" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_check_update"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="🔄 בדוק עדכוני גרסה (OTA)"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
+
     </LinearLayout>
 </ScrollView>

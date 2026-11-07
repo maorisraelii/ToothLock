@@ -34,6 +34,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnChangeTime: MaterialButton
     private lateinit var btnPinWidget: MaterialButton
     private lateinit var btnTestNotification: MaterialButton
+    private lateinit var btnCheckUpdate: MaterialButton
     private lateinit var cardStatus: MaterialCardView
 
     private val permissionLauncher = registerForActivityResult(
@@ -61,6 +62,9 @@ class MainActivity : AppCompatActivity() {
 
         // Ensure background bedtime check is scheduled
         ToothCheckWorker.scheduleDailyBedtimeCheck(this)
+
+        // Check for OTA updates in background
+        checkForUpdates(manual = false)
     }
 
     override fun onResume() {
@@ -80,6 +84,7 @@ class MainActivity : AppCompatActivity() {
         btnChangeTime = findViewById(R.id.btn_change_time)
         btnPinWidget = findViewById(R.id.btn_pin_widget)
         btnTestNotification = findViewById(R.id.btn_test_notification)
+        btnCheckUpdate = findViewById(R.id.btn_check_update)
         cardStatus = findViewById(R.id.card_status)
     }
 
@@ -157,6 +162,69 @@ class MainActivity : AppCompatActivity() {
                     isSleeping = isSleeping
                 )
                 Toast.makeText(this@MainActivity, "נשלחה התראת בדיקה לשעון ולטלפון! בדוק את היד שלך ⌚", Toast.LENGTH_LONG).show()
+            }
+        }
+
+        // Check for updates manually
+        btnCheckUpdate.setOnClickListener {
+            checkForUpdates(manual = true)
+        }
+    }
+
+    private fun checkForUpdates(manual: Boolean) {
+        val currentVer = try {
+            val pInfo = packageManager.getPackageInfo(packageName, 0)
+            pInfo.versionName ?: "1.0.0"
+        } catch (_: Exception) {
+            "1.0.0"
+        }
+
+        lifecycleScope.launch {
+            if (manual) {
+                Toast.makeText(this@MainActivity, "בודק עדכונים...", Toast.LENGTH_SHORT).show()
+            }
+            val release = OtaUpdater.checkLatestRelease()
+            if (release != null && OtaUpdater.isNewerVersion(currentVer, release.tagName)) {
+                showUpdateDialog(release)
+            } else if (manual) {
+                Toast.makeText(this@MainActivity, "האפליקציה מעודכנת לגרסה האחרונה ($currentVer) ✨", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun showUpdateDialog(release: ReleaseInfo) {
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        builder.setTitle("🚀 עדכון גרסה חדש זמין (${release.tagName})")
+        val notes = if (release.body.isNotBlank()) release.body else "גרסה חדשה של ToothLock זמינה להתקנה."
+        builder.setMessage("$notes\n\nהאם ברצונך להוריד ולהתקין את העדכון כעת?")
+        builder.setPositiveButton("הורד ועדכן עכשיו") { _, _ ->
+            startOtaDownload(release)
+        }
+        builder.setNegativeButton("הזכר לי מחר", null)
+        builder.show()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun startOtaDownload(release: ReleaseInfo) {
+        val progressDialog = android.app.ProgressDialog(this).apply {
+            setTitle("מוריד עדכון גרסה...")
+            setMessage("אנא המתן, מוריד את ToothLock ${release.tagName}...")
+            setProgressStyle(android.app.ProgressDialog.STYLE_HORIZONTAL)
+            max = 100
+            setCancelable(false)
+            show()
+        }
+
+        lifecycleScope.launch {
+            val apkFile = OtaUpdater.downloadApk(this@MainActivity, release.downloadUrl) { percent ->
+                progressDialog.progress = percent
+            }
+            progressDialog.dismiss()
+
+            if (apkFile != null && apkFile.exists()) {
+                OtaUpdater.installApk(this@MainActivity, apkFile)
+            } else {
+                Toast.makeText(this@MainActivity, "שגיאה בהורדת העדכון. נסה שוב מאוחר יותר.", Toast.LENGTH_LONG).show()
             }
         }
     }
