@@ -10,10 +10,10 @@
   <!-- Enables 100% instant cloud updates on every git push without APK installs! -->
   <!-- ========================================================================= -->
   <script>
-    window.__APP_VERSION__ = "1.0.34";
-    window.__BUILD_TIMESTAMP__ = 1762518000;
-    window.__REQUIRED_MIN_NATIVE_BUILD__ = 130;
-    window.__OTA_RELEASE_NOTES__ = "מצב סודי 'עמרי סבן' 🦨☣️: ערכת נושא TOXIC ירוקה זרחנית, מעקב מקלחת יומית ומד סירחון, ואפשרות שיתוף ישירה להטרלה!";
+    window.__APP_VERSION__ = "1.0.35";
+    window.__BUILD_TIMESTAMP__ = 1762524600;
+    window.__REQUIRED_MIN_NATIVE_BUILD__ = 135;
+    window.__OTA_RELEASE_NOTES__ = "סמלי אפליקציה חדשים 🪥✨: סמל ToothLock יוקרתי, וגולגולת סירחון זרחנית 💀☣️ שמתחלפת דינמית במסך הבית במצב 'עמרי סבן'!";
 
     // 1. BOOTSTRAP CACHED LIVE OTA FROM STORAGE IMMEDIATELY
     (function bootstrapCachedLiveUpdate() {
@@ -492,7 +492,7 @@
           <span class="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">מצב סודי 🦨</span>
         </div>
         <p class="text-xs text-slate-300 leading-relaxed">
-          ערכת נושא ירוקה זרחנית של סירחון, מעקב מקלחות יומי של עמרי, ומד סירחון להטרלת חברים! (טיפ: ניתן להפעיל גם בלחיצה 5 פעמים על כותרת האפליקציה).
+          ערכת נושא ירוקה זרחנית של סירחון, מעקב מקלחות יומי של עמרי, החלפה דינמית של סמל האפליקציה במסך הבית לגולגולת סירחון זרחנית 💀☣️ ומד סירחון להטרלת חברים! (ניתן להפעיל גם ב-5 לחיצות על כותרת האפליקציה).
         </p>
         <button id="btn-toggle-saban-mode" onclick="toggleOmriSabanMode()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-green-600 text-black font-black text-xs shadow-md active:scale-95 transition-all">
           הפעל מצב "עמרי סבן" 🦨☣️
@@ -539,7 +539,7 @@
         <div class="space-y-2 text-xs bg-white/5 p-3.5 rounded-2xl">
           <div class="flex justify-between">
             <span class="text-slate-400">גרסת ממשק ענן (OTA Web):</span>
-            <span id="ota-web-version" class="font-bold text-sky-400 font-mono">v1.0.34</span>
+            <span id="ota-web-version" class="font-bold text-sky-400 font-mono">v1.0.35</span>
           </div>
           <div class="flex justify-between">
             <span class="text-slate-400">גרסת אפליקציה מותקנת (Native):</span>
@@ -961,6 +961,14 @@
       }
 
       updateSabanShowerUi();
+
+      if (window.ToothLockBridge && typeof window.ToothLockBridge.setLauncherIcon === 'function') {
+        try {
+          window.ToothLockBridge.setLauncherIcon(isSabanMode);
+        } catch (e) {
+          console.error("Launcher icon sync error:", e);
+        }
+      }
     }
 
     function updateSabanShowerUi() {

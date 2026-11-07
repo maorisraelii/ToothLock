@@ -17,9 +17,9 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ic_toothbrush"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@drawable/ic_toothbrush"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ToothLock">
 
@@ -31,9 +31,38 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Normal ToothLock Launcher Icon Alias -->
+        <activity-alias
+            android:name=".MainActivityNormal"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:label="@string/app_name"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- Secret Omri Saban Toxic Stench Launcher Icon Alias -->
+        <activity-alias
+            android:name=".MainActivityToxic"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_toxic"
+            android:roundIcon="@mipmap/ic_launcher_toxic_round"
+            android:label="סירחון סבן ☣️"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <!-- Home Screen App Widget -->
         <receiver
