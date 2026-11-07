@@ -4,8 +4,14 @@ import android.content.Context
 import android.content.SharedPreferences
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
+
+data class DayHistoryItem(
+    val dayName: String,
+    val dateKey: String,
+    val isBrushed: Boolean,
+    val isToday: Boolean
+)
 
 class ToothPreferences(context: Context) {
 
@@ -20,6 +26,9 @@ class ToothPreferences(context: Context) {
         private const val KEY_LAST_STREAK_DATE = "last_streak_date"
         private const val PREFIX_BRUSHED = "brushed_"
         private const val PREFIX_ALERT_COUNT = "alert_count_"
+        private const val KEY_ALERT_INTERVAL = "pref_alert_interval"
+        private const val KEY_PULSE_COUNT = "pref_watch_pulse_count"
+        private const val KEY_MOTION_CANCEL = "pref_motion_cancel"
 
         /**
          * Shift the day backwards by 4 hours so the status resets at 04:00 AM instead of 00:00.
@@ -113,6 +122,37 @@ class ToothPreferences(context: Context) {
         return prefs.getInt(KEY_STREAK, 0)
     }
 
+    /**
+     * Returns the 7-day brushing history ending today.
+     */
+    fun getLast7DaysHistory(): List<DayHistoryItem> {
+        val list = mutableListOf<DayHistoryItem>()
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        val today = getTodayKey()
+
+        for (i in 6 downTo 0) {
+            val cal = Calendar.getInstance().apply {
+                add(Calendar.HOUR_OF_DAY, -4)
+                add(Calendar.DAY_OF_YEAR, -i)
+            }
+            val dateKey = sdf.format(cal.time)
+            val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK)
+            val hebrewDay = when (dayOfWeek) {
+                Calendar.SUNDAY -> "א'"
+                Calendar.MONDAY -> "ב'"
+                Calendar.TUESDAY -> "ג'"
+                Calendar.WEDNESDAY -> "ד'"
+                Calendar.THURSDAY -> "ה'"
+                Calendar.FRIDAY -> "ו'"
+                Calendar.SATURDAY -> "ש'"
+                else -> ""
+            }
+            val isBrushed = prefs.getBoolean(PREFIX_BRUSHED + dateKey, false)
+            list.add(DayHistoryItem(hebrewDay, dateKey, isBrushed, isToday = (dateKey == today)))
+        }
+        return list
+    }
+
     var targetHour: Int
         get() = prefs.getInt(KEY_TARGET_HOUR, 23)
         set(value) = prefs.edit().putInt(KEY_TARGET_HOUR, value).apply()
@@ -120,4 +160,16 @@ class ToothPreferences(context: Context) {
     var targetMinute: Int
         get() = prefs.getInt(KEY_TARGET_MINUTE, 0)
         set(value) = prefs.edit().putInt(KEY_TARGET_MINUTE, value).apply()
+
+    var alertIntervalMinutes: Int
+        get() = prefs.getInt(KEY_ALERT_INTERVAL, 7)
+        set(value) = prefs.edit().putInt(KEY_ALERT_INTERVAL, value).apply()
+
+    var watchPulseCount: Int
+        get() = prefs.getInt(KEY_PULSE_COUNT, 5)
+        set(value) = prefs.edit().putInt(KEY_PULSE_COUNT, value).apply()
+
+    var enableMotionCancellation: Boolean
+        get() = prefs.getBoolean(KEY_MOTION_CANCEL, true)
+        set(value) = prefs.edit().putBoolean(KEY_MOTION_CANCEL, value).apply()
 }
