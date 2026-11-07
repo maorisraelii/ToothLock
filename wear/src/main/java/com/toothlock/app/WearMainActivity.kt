@@ -1,5 +1,6 @@
 package com.toothlock.app
 
+import com.toothlock.app.wear.R
 import android.app.Activity
 import android.content.Context
 import android.graphics.Color
