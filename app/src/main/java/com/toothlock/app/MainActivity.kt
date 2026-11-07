@@ -69,6 +69,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnLabCheckWatch: MaterialButton
     private lateinit var btnLabTestWatchPulse: MaterialButton
     private lateinit var btnLabTestWatchDelayed: MaterialButton
+    private lateinit var btnOpenGalaxyWearable: MaterialButton
     private lateinit var btnLabTestPhoneAlarm: MaterialButton
     private lateinit var tvLabSimStatus: TextView
     private lateinit var btnLabStartSimulation: MaterialButton
@@ -154,6 +155,7 @@ class MainActivity : AppCompatActivity() {
         btnLabCheckWatch = findViewById(R.id.btn_lab_check_watch)
         btnLabTestWatchPulse = findViewById(R.id.btn_lab_test_watch_pulse)
         btnLabTestWatchDelayed = findViewById(R.id.btn_lab_test_watch_delayed)
+        btnOpenGalaxyWearable = findViewById(R.id.btn_open_galaxy_wearable)
         btnLabTestPhoneAlarm = findViewById(R.id.btn_lab_test_phone_alarm)
         tvLabSimStatus = findViewById(R.id.tv_lab_sim_status)
         btnLabStartSimulation = findViewById(R.id.btn_lab_start_simulation)
@@ -242,6 +244,23 @@ class MainActivity : AppCompatActivity() {
                 delay(3500)
                 val isSleeping = detector.isSleepModeActive()
                 NotificationHelper.sendWatchFocusedAlert(this@MainActivity, alertIndex = 1, isSleeping = isSleeping)
+            }
+        }
+
+        // Lab: Open Galaxy Wearable notification settings
+        btnOpenGalaxyWearable.setOnClickListener {
+            try {
+                val intent = packageManager.getLaunchIntentForPackage("com.samsung.android.app.watchmanager")
+                if (intent != null) {
+                    startActivity(intent)
+                } else {
+                    val fallback = Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                        putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, packageName)
+                    }
+                    startActivity(fallback)
+                }
+            } catch (_: Exception) {
+                Toast.makeText(this, "לא ניתן לפתוח את אפליקציית Galaxy Wearable", Toast.LENGTH_SHORT).show()
             }
         }
 

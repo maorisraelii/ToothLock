@@ -456,6 +456,15 @@
                             android:textColor="#FFD54F"
                             android:textSize="11sp" />
 
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_open_galaxy_wearable"
+                            style="@style/Widget.Material3.Button.TextButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="⚙️ פתח הגדרות התראות ב-Galaxy Wearable"
+                            android:textColor="#FFD54F" />
+
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
