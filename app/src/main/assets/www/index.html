@@ -10,10 +10,10 @@
   <!-- Enables 100% instant cloud updates on every git push without APK installs! -->
   <!-- ========================================================================= -->
   <script>
-    window.__APP_VERSION__ = "1.0.31";
-    window.__BUILD_TIMESTAMP__ = 1762513200;
+    window.__APP_VERSION__ = "1.0.32";
+    window.__BUILD_TIMESTAMP__ = 1762514800;
     window.__REQUIRED_MIN_NATIVE_BUILD__ = 130;
-    window.__OTA_RELEASE_NOTES__ = "מנוע עדכונים Over-The-Air חי מהענן (בדיוק כמו ב-PriceRadar!), ממשק Liquid Glass יוקרתי, טיימר חכם וטאב בדיקות מעבדה מתקדם.";
+    window.__OTA_RELEASE_NOTES__ = "ביטול מוחלט של רטט בטלפון! הטלפון 100% שקט ודומם, ורטט מועבר בלעדית לשעון Galaxy Watch ב-4 פולסים מתמשכים.";
 
     // 1. BOOTSTRAP CACHED LIVE OTA FROM STORAGE IMMEDIATELY
     (function bootstrapCachedLiveUpdate() {
@@ -806,18 +806,18 @@
     }
 
     function testWatchAlertDirect() {
-      triggerHaptic("heavy");
+      // NOTE: Zero vibration on phone! Phone remains 100% still and silent.
       if (window.ToothLockBridge) {
         window.ToothLockBridge.sendWatchAlert(1);
-        showToast("🚀 נשלח רטט ישיר לשעון! הטלפון שקט.");
+        showToast("⌚ נשלח רטט לשעון בלבד! הטלפון דומם ושקט ב-100%.");
       } else {
         showToast("נשלח רטט מדומה לשעון.");
       }
     }
 
     function testWatchAlertDelayed() {
-      triggerHaptic("heavy");
-      showToast("🔒 כבה/נעל את מסך הטלפון כעת! הרטט יישלח בעוד 3 שניות...");
+      // NOTE: Zero vibration on phone!
+      showToast("🔒 כבה/נעל את מסך הטלפון כעת! השעון ירטוט ב-4 פולסים בעוד 3 שניות...");
       if (window.ToothLockBridge) {
         window.ToothLockBridge.sendDelayedWatchAlert(3);
       }
