@@ -78,6 +78,18 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
+        <!-- Quick Settings Tile -->
+        <service
+            android:name=".ToothLockTileService"
+            android:icon="@drawable/ic_toothbrush"
+            android:label="ToothLock"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
     </application>
 
 </manifest>

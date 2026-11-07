@@ -6,6 +6,8 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
+import android.media.AudioManager
+import android.media.ToneGenerator
 import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
@@ -393,8 +395,13 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator?.vibrate(VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE))
         } else {
+            @Suppress("DEPRECATION")
             vibrator?.vibrate(150)
         }
+        try {
+            val toneGen = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 80)
+            toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 150)
+        } catch (_: Exception) {}
     }
 
     private fun longSuccessVibrate() {
@@ -403,8 +410,13 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator?.vibrate(VibrationEffect.createWaveform(pattern, -1))
         } else {
+            @Suppress("DEPRECATION")
             vibrator?.vibrate(pattern, -1)
         }
+        try {
+            val toneGen = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 90)
+            toneGen.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 350)
+        } catch (_: Exception) {}
     }
 
     private fun refreshLiveStatus() {
