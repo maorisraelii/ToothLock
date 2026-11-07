@@ -249,7 +249,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Lab: Open Galaxy Wearable notification settings
-        btnOpenGalaxyWearable.setOnClickListener {
+        val openWearableAction = {
             try {
                 val intent = packageManager.getLaunchIntentForPackage("com.samsung.android.app.watchmanager")
                 if (intent != null) {
@@ -264,6 +264,8 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "לא ניתן לפתוח את אפליקציית Galaxy Wearable", Toast.LENGTH_SHORT).show()
             }
         }
+        btnOpenGalaxyWearable.setOnClickListener { openWearableAction() }
+        findViewById<android.view.View>(R.id.btn_open_galaxy_wearable_banner)?.setOnClickListener { openWearableAction() }
 
         // Lab: Test Phone Emergency Alarm
         btnLabTestPhoneAlarm.setOnClickListener {

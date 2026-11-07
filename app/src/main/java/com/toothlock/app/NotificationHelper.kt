@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 
 object NotificationHelper {
 
-    const val CHANNEL_WATCH = "tooth_watch_vibration_v6"
+    const val CHANNEL_WATCH = "tooth_watch_alert_v7"
     const val CHANNEL_EMERGENCY = "tooth_emergency_phone_v4"
     const val NOTIFICATION_ID = 1001
 
@@ -34,20 +34,32 @@ object NotificationHelper {
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
             // Clean up old channels
-            listOf("tooth_urgent_alerts", "tooth_alarm_v3", "tooth_watch_channel_v4", "tooth_watch_silent_phone_v5").forEach {
+            listOf(
+                "tooth_urgent_alerts",
+                "tooth_alarm_v3",
+                "tooth_watch_channel_v4",
+                "tooth_watch_silent_phone_v5",
+                "tooth_watch_vibration_v6"
+            ).forEach {
                 try { notificationManager.deleteNotificationChannel(it) } catch (_: Exception) {}
             }
 
-            // 1. Watch-Focused Channel: Enables vibration for Wear OS / Galaxy Watch bridge with silent sound
+            // 1. Watch-Focused Channel: Configured with standard alert attributes so Samsung mirrors to Galaxy Watch
+            val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            val audioAttributes = AudioAttributes.Builder()
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .build()
+
             val watchChannel = NotificationChannel(
                 CHANNEL_WATCH,
-                "תזכורת צחצוח לשעון סמסונג (רטט בשעון)",
+                "תזכורת צחצוח לשעון סמסונג (התראה לשעון)",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "רטט מורגש בשעון סמסונג ללא צליל התראה רועש"
+                description = "תזכורת צחצוח המועברת לשעון סמסונג עם רטט מורגש"
                 enableVibration(true)
                 vibrationPattern = longArrayOf(0, 1000, 400, 1000, 400, 1200)
-                setSound(null, null)
+                setSound(defaultSoundUri, audioAttributes)
                 setBypassDnd(true)
                 lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             }
@@ -117,6 +129,8 @@ object NotificationHelper {
                 ).build()
             )
 
+        val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+
         val builder = NotificationCompat.Builder(context, CHANNEL_WATCH)
             .setSmallIcon(R.drawable.ic_toothbrush)
             .setContentTitle(title)
@@ -127,7 +141,8 @@ object NotificationHelper {
             .setContentIntent(openAppPendingIntent)
             .setAutoCancel(true)
             .setLocalOnly(false)
-            .setSound(null)
+            .setSound(defaultSoundUri)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setVibrate(longArrayOf(0, 1000, 400, 1000, 400, 1200))
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .addAction(R.drawable.ic_check, "צחצחתי! 🪥", brushedPendingIntent)
