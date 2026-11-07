@@ -363,7 +363,7 @@ class MainActivity : AppCompatActivity() {
                 tvTimerDisplay.text = "00:00"
                 tvTimerZone.text = "צחצוח הושלם בהצלחה! ✨🦷"
                 btnTimerToggle.text = "התחל שוב ▶"
-                btnTimerToggle.setBackgroundColor(ContextCompat.getColor(this, R.color.primary))
+                btnTimerToggle.setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.primary))
                 pbTimerProgress.progress = 0
 
                 // Mark brushed and update streak automatically!
